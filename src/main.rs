@@ -1,14 +1,14 @@
-extern crate hyper;
+extern crate iron;
 
-use hyper::Server;
-use hyper::server::Request;
-use hyper::server::Response;
+use iron::prelude::*;
+use iron::status;
 
-fn hello(_: Request, res: Response) {
-    res.send(b"Coming soon!").unwrap();
-}
 
 fn main() {
-    Server::http("127.0.0.1:3000").unwrap()
-        .handle(hello).unwrap();
+    fn hello_world(_: &mut Request) -> IronResult<Response> {
+        Ok(Response::with((status::Ok, "你好，Rust China!")))
+    }
+
+    Iron::new(hello_world).http("localhost:3000").unwrap();
+    println!("On 3000");
 }

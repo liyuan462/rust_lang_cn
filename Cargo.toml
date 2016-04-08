@@ -4,4 +4,4 @@ version = "0.1.0"
 authors = ["liyuan <liyuan462@gmail.com>"]
 
 [dependencies]
-hyper = "0.7"
+iron = "*"

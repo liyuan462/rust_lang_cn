@@ -1,17 +1,35 @@
-use std::path::Path;
-use hyper::header::ContentType;
-use hyper::mime::{Mime, TopLevel, SubLevel};
+use rustc_serialize::json::{Object, Json, ToJson};
+use base::config::Config;
 use iron::prelude::*;
-use iron::modifiers::Header;
+use persistent::Read;
+use hbsi::Template;
 use iron::status;
 
+pub struct ResponseData(Object);
 
-pub fn template_response(template_name: &str, data: ::mustache::Data) -> IronResult<Response>{
-    let path_string = format!("{}{}", "templates/", template_name);
-    let path = Path::new(&path_string);
-    let template = ::mustache::compile_path(path).unwrap();
-    let mut body: Vec<u8> = Vec::new();
-    template.render_data(&mut body, &data);
-    let content_type = ContentType(Mime(TopLevel::Text, SubLevel::Html, vec![]));
-    Ok(Response::with((status::Ok, body, Header(content_type))))
+impl ResponseData {
+    pub fn new(req: &mut Request) -> ResponseData {
+        let config = req.get::<Read<Config>>().unwrap();
+        let mut data = Object::new();
+        data.insert("static_path".to_string(),
+                    config.get("static_path").as_str().unwrap().to_string().to_json());
+        ResponseData(data)
+    }
+
+    pub fn insert(&mut self, key: String, value: Json) -> &mut Self {
+        self.0.insert(key, value);
+        self
+    }
+}
+
+impl<'a> ToJson for &'a ResponseData {
+    fn to_json(&self) -> Json {
+        self.0.to_json()
+    }
+}
+
+pub fn temp_response(temp_name: &str, data: &ResponseData) -> IronResult<Response> {
+    let mut resp = Response::new();
+    resp.set_mut(Template::new(temp_name, data)).set_mut(status::Ok);
+    Ok(resp)
 }

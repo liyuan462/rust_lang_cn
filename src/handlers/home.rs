@@ -1,11 +1,11 @@
 use iron::prelude::*;
-use mustache::MapBuilder;
-use base::framework::template_response;
+use hbsi::Template;
+use iron::status;
+use rustc_serialize::json::ToJson;
+use base::framework::{ResponseData, temp_response};
 
-pub fn index(_: &mut Request) -> IronResult<Response> {
-    let data = MapBuilder::new()
-        .insert_str("name", "Rust China!")
-        .build();
-
-    template_response("index.html", data)
+pub fn index(req: &mut Request) -> IronResult<Response> {
+    let mut data = ResponseData::new(req);
+    data.insert("name".to_string(), "你好!".to_string().to_json());
+    temp_response("index", &data)
 }

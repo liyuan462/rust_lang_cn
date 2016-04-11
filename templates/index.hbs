@@ -1,4 +1,23 @@
-{{#partial page}}
-  <h1>Hello, {{ name }}</h1>
+{{#partial head}}
+  <link href="{{ static_path }}/css/index.css" rel="stylesheet">
 {{/partial}}
+
+{{#partial page}}
+  <header>
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12">
+          <a class="title" href="/">Rust China</a>
+
+          <ul class="nav-links list-inline pull-right">
+            <li><a href="#">注册</a></li>
+            <li><a href="#">登录</a></li>
+          </ul>
+
+        </div>
+      </div>
+    </div>
+  </header>
+{{/partial}}
+
 {{~> base~}}

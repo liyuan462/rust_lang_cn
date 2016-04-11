@@ -1,0 +1,27 @@
+@head-link-color:       #FFF;
+@head-link-hover-color: darken(@head-link-color, 15%);
+
+header {
+    background: #000;
+    height: 60px;
+    color: #FFF;
+    line-height: 60px;
+    a {
+        color: @head-link-color;
+        text-decoration: none;
+        &:hover {
+            color: @head-link-hover-color;
+            text-decoration: none;
+        }
+    }
+}
+
+header.container {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+header .title {
+    font-size: 18px;
+    font-weight: bold;
+}

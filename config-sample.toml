@@ -1,1 +1,8 @@
-static_path = "http://localhost:8000"
+static_path = "http://localhost"
+
+[database]
+host = "localhost"
+port = 3306
+user = "user"
+password = "password"
+name = "db_name"

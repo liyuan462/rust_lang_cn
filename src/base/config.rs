@@ -8,6 +8,7 @@ use std::cmp::Ord;
 use std::borrow::Borrow;
 use iron::typemap::Key;
 
+#[derive(Clone)]
 pub struct Config(Table);
 
 impl Config {
@@ -23,6 +24,11 @@ impl Config {
     pub fn get<Q: ?Sized>(&self, key: &Q) -> &Value where String: Borrow<Q>, Q: Ord {
         self.0.get(key).unwrap()
     }
+
+    pub fn value(&self) -> Table {
+        self.0.clone()
+    }
+
 }
 
 impl Key for Config {

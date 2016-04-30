@@ -5,6 +5,7 @@ dependencies = [
  "handlebars-iron 0.15.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "hyper 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "iron 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "iron-login 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "mime 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "mysql 3.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "persistent 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -192,6 +193,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "iron-login"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "cookie 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "iron 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "oven 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "persistent 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "itertools"
 version = "0.4.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -340,6 +352,16 @@ dependencies = [
  "gcc 0.3.26 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "openssl-sys 0.7.9 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "oven"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "cookie 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "iron 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "plugin 0.2.6 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]

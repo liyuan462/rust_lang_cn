@@ -11,6 +11,7 @@ extern crate mysql;
 extern crate crypto;
 extern crate rand;
 extern crate time;
+extern crate iron_login;
 
 mod base;
 mod handlers;
@@ -40,5 +41,9 @@ fn main() {
     }
 
     chain.link_after(hbse);
-    iron::Iron::new(chain).http("localhost:3000").unwrap();
+
+    let cookie_signing_key = b"test"[..].to_owned();
+    chain.link_around(iron_login::LoginManager::new(cookie_signing_key));
+
+    iron::Iron::new(chain).http("0.0.0.0:3000").unwrap();
 }

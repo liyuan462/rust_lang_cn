@@ -5,6 +5,7 @@ use persistent::Read;
 use hbsi::Template;
 use iron::status;
 use mysql as my;
+use iron_login::User;
 
 pub struct ResponseData(Object);
 
@@ -14,6 +15,13 @@ impl ResponseData {
         let mut data = Object::new();
         data.insert("static_path".to_string(),
                     config.get("static_path").as_str().unwrap().to_string().to_json());
+        let login = LoginUser::get_login(req);
+        let raw_user = login.get_user();
+        let mut username = Json::Null;
+        if let Some(LoginUser(name)) = raw_user {
+            username = Json::String(name)
+        }
+        data.insert("login_user".to_string(), username);
         ResponseData(data)
     }
 
@@ -86,12 +94,21 @@ pub fn json_error_response(message: &str) -> IronResult<Response> {
     json_response(JsonStatus::Fail, message, Object::new())
 }
 
-pub fn get_db_pool() -> my::Pool {
-    let mut builder = my::OptsBuilder::default();
-    builder.user(Some("root"))
-        .pass(Some("123456"))
-        .ip_or_hostname(Some("192.168.99.100"))
-        .tcp_port(3306)
-        .db_name(Some("rust_lang_cn"));
-    my::Pool::new(builder).unwrap()
+#[derive(Debug)]
+pub struct LoginUser(String);
+
+impl LoginUser {
+    pub fn new(user_id: &str) -> LoginUser {
+        LoginUser(user_id.to_owned())
+    }
+}
+
+impl User for LoginUser {
+    fn from_user_id(_: &mut Request, user_id: &str) -> Option<LoginUser> {
+        Some(LoginUser(user_id.to_owned()))
+    }
+
+    fn get_user_id(&self) -> String {
+        self.0.to_owned()
+    }
 }

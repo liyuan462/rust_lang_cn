@@ -35,8 +35,19 @@
         <!-- Collect the nav links, forms, and other content for toggling -->
         <div class="collapse navbar-collapse" id="navbar-collapse">
           <ul class="nav navbar-nav navbar-right">
-            <li><a href="/user/register/load">注册</a></li>
-            <li><a href="#">登录</a></li>
+            {{#if login_user}}
+              <li role="presentation" class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                  {{login_user}} <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu">
+                  <li><a href="javascript:void(0)" id="logoutBtn">退出</a></li>
+                </ul>
+              </li>
+            {{else}}
+              <li><a href="/user/register">注册</a></li>
+              <li><a href="/user/login">登录</a></li>
+            {{/if}}
           </ul>
         </div><!-- /.navbar-collapse -->
       </div><!-- /.container-fluid -->
@@ -46,6 +57,17 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
     <script src="http://malsup.github.com/jquery.form.js"></script>
     <script src="{{ static_path  }}/bootstrap/js/bootstrap.min.js"></script>
+    <script>
+     $("#logoutBtn").click(function() {
+         $.ajax({
+             url: "/user/logout",
+             method: "POST",
+             success: function() {
+                 location.href = "/";
+             }
+         });
+     });
+    </script>
     {{~#block footer_js}}{{/block~}}
   </body>
 </html>

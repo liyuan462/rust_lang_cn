@@ -1,5 +1,7 @@
 use router::Router;
 use handlers;
+use base::framework::user_required;
+use iron::middleware::AroundMiddleware;
 
 pub fn gen_router() -> Router {
     let mut router = Router::new();
@@ -9,5 +11,8 @@ pub fn gen_router() -> Router {
     router.get("/user/login", handlers::user::login_load);
     router.post("/user/login", handlers::user::login);
     router.post("/user/logout", handlers::user::logout);
+    router.get("/article/new", user_required(handlers::article::new_load));
+    router.post("/article/new", user_required(handlers::article::new));
+    router.get("/article/:article_id", handlers::article::show);
     router
 }

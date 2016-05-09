@@ -1,1 +1,49 @@
+{{#partial page}}
+  <div class="container">
+    <div class="row">
+      <div class="col-md-9">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <ul class="nav nav-pills">
+                    <li role="presentation" class="active"><a href="#">全部</a></li>
+                    {{#if login_user}}
+                        <li role="presentation" class="active pull-right"><a href="/article/new">发布话题</li>
+                    {{/if}}
+                </ul>
+            </div>
+          <div class="panel-body">
+              <ul class="media-list">
+                  {{#each articles}}
+                  <li class="media">
+                      <div class="media-left">
+                          <a href="#">
+                              <img class="media-object" src="{{ ../../static_path }}/images/default-avatar.png" style="width:64px;height:64px;">
+                          </a>
+                      </div>
+                      <div class="media-body">
+                          <h4 class="media-heading"><a href="/article/{{id}}">{{title}}</a></h4>
+                          <h5 class="media-heading">
+                              <small>
+                                  <a href="#">学习资料</a>•
+                                  <a href="#">{{user.username}}</a>•
+                                  于{{create_time}}最后更新
+                              </small>
+                          </h5>
+                      </div>
+                      <div class="media-right media-middle">
+                          <h4><span class="label label-default">0</span></h4>
+                      </div>
+                  </li>
+                  {{/each}}
+              </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{{/partial}}
+{{#partial footer_js}}
+    <script>
+    </script>
+{{/partial}}
 {{~> base~}}

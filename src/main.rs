@@ -6,12 +6,16 @@ extern crate rustc_serialize;
 extern crate persistent;
 extern crate urlencoded;
 extern crate traitobject;
-#[macro_use] extern crate mime;
+#[macro_use]
+extern crate mime;
 extern crate mysql;
 extern crate crypto;
 extern crate rand;
-extern crate time;
 extern crate iron_login;
+#[macro_use]
+extern crate log;
+extern crate log4rs;
+extern crate chrono;
 
 mod base;
 mod handlers;
@@ -25,13 +29,19 @@ use base::config::Config;
 use base::db::MyPool;
 
 fn main() {
-    let mut chain = Chain::new(route::gen_router());
+    // init logging
+    log4rs::init_file("log4rs.yaml", Default::default()).unwrap();
 
+    let mut chain = Chain::new(route::gen_router());
     let config = Config::new();
     chain.link_before(Read::<Config>::one(config.clone()));
 
-    let myPool = MyPool::new(&config);
-    chain.link_before(Read::<MyPool>::one(myPool));
+    let my_pool = MyPool::new(&config);
+    chain.link_before(Read::<MyPool>::one(my_pool));
+
+    // TODO: read key from configuration file.
+    let cookie_signing_key = b"test"[..].to_owned();
+    chain.link_around(iron_login::LoginManager::new(cookie_signing_key));
 
     let mut hbse = HandlebarsEngine::new();
     hbse.add(Box::new(DirectorySource::new("templates/", ".hbs")));
@@ -41,9 +51,6 @@ fn main() {
     }
 
     chain.link_after(hbse);
-
-    let cookie_signing_key = b"test"[..].to_owned();
-    chain.link_around(iron_login::LoginManager::new(cookie_signing_key));
 
     iron::Iron::new(chain).http("0.0.0.0:3000").unwrap();
 }

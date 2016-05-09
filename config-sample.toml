@@ -1,3 +1,4 @@
+app_path = "http://localhost"
 static_path = "http://localhost"
 
 [database]

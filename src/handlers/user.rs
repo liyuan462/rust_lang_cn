@@ -11,7 +11,7 @@ use crypto::md5;
 use crypto::digest::Digest;
 use rand;
 use rand::Rng;
-use time;
+use chrono::*;
 use base::db::MyPool;
 use persistent::Read;
 use base::framework::LoginUser;
@@ -45,7 +45,7 @@ pub fn register(req: &mut Request) -> IronResult<Response> {
         .take(32)
         .collect::<String>();
 
-    let now = format!("{}", time::now().strftime("%Y-%m-%d %H:%M:%S").unwrap());
+    let now = Local::now().naive_local();
     let password_with_salt = password + &salt;
     let mut sh = md5::Md5::new();
     sh.input_str(&password_with_salt);
@@ -82,13 +82,13 @@ pub fn login(req: &mut Request) -> IronResult<Response> {
 
     let pool = req.get::<Read<MyPool>>().unwrap().value();
 
-    let mut result = pool.prep_exec("SELECT password, salt from user where username=?", (&username,)).unwrap();
+    let mut result = pool.prep_exec("SELECT id, email, password, salt from user where username=?", (&username,)).unwrap();
     let raw_row = result.next();
     if raw_row.is_none() {
         return json_error_response("对不起，用户名或密码不对");
     }
     let row = raw_row.unwrap().unwrap();
-    let (pass, salt) = my::from_row::<(String, String)>(row);
+    let (user_id, email, pass, salt) = my::from_row::<(u64, String, String, String)>(row);
     let password_with_salt = password + &salt;
     let mut sh = md5::Md5::new();
     sh.input_str(&password_with_salt);
@@ -100,7 +100,7 @@ pub fn login(req: &mut Request) -> IronResult<Response> {
     // set session
     let login = LoginUser::get_login(req);
     let mut resp = json_ok_response().unwrap();
-    resp.set_mut(login.log_in(LoginUser::new(&username)));
+    resp.set_mut(login.log_in(LoginUser::new(user_id, &username, &email)));
     Ok(resp)
 }
 

@@ -1,0 +1,27 @@
+{{#partial page}}
+  <div class="container">
+    <div class="row">
+      <div class="col-md-9">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h4>{{ article.title }}</h4>
+                <h5>
+                    <small>
+                        <a href="#">{{ article.user.username }}</a>•
+                        于{{ article.create_time}}最后更新
+                    </small>
+                </h5>
+            </div>
+            <div class="panel-body">
+                {{ article.content }}
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{{/partial}}
+{{#partial footer_js}}
+    <script>
+    </script>
+{{/partial}}
+{{~> base~}}

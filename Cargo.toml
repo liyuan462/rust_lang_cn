@@ -17,5 +17,7 @@ mime = "*"
 mysql = "*"
 rust-crypto = "*"
 rand = "*"
-time = "*"
+chrono = "*"
 iron-login = "*"
+log = "*"
+log4rs = { version="*", features = ["yaml"] }

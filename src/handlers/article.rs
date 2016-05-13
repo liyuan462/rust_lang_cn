@@ -4,24 +4,26 @@ use base::framework::{ResponseData, temp_response,
                       not_found_response};
 use urlencoded::UrlEncodedBody;
 use base::db::MyPool;
-use base::validator::{Validator, Checker, Str, StrValue, Int, Max, Min};
+use base::validator::{Validator, Checker, Str, StrValue, Int, IntValue, Max, Min};
 use base::framework::LoginUser;
 use iron_login::User as U;
 use persistent::Read;
 use chrono::*;
 use router::Router;
 use mysql as my;
-use base::model::{Article, User};
-use rustc_serialize::json::{Object, Json, ToJson, encode};
+use base::model::{Article, User, Category};
+use rustc_serialize::json::ToJson;
 
 pub fn new_load(req: &mut Request) -> IronResult<Response> {
-    let data = ResponseData::new(req);
+    let mut data = ResponseData::new(req);
+    data.insert("categories".to_owned(), Category::all().to_json());
     temp_response("article/new_load", &data)
 }
 
 pub fn new(req: &mut Request) -> IronResult<Response> {
     let mut validator = Validator::new();
     validator
+        .add_checker(Checker::new("category", Int, "类别") << Min(0) << Max(2))
         .add_checker(Checker::new("title", Str, "标题") << Min(3) << Max(48))
         .add_checker(Checker::new("content", Str, "内容") << Min(7));
 
@@ -30,6 +32,7 @@ pub fn new(req: &mut Request) -> IronResult<Response> {
         return json_error_response(&validator.messages[0]);
     }
 
+    let category = validator.get_valid::<IntValue>("category").value();
     let title = validator.get_valid::<StrValue>("title").value();
     let content = validator.get_valid::<StrValue>("content").value();
     let pool = req.get::<Read<MyPool>>().unwrap().value();
@@ -37,14 +40,14 @@ pub fn new(req: &mut Request) -> IronResult<Response> {
     let user = login.get_user().unwrap();
 
     let now = Local::now().naive_local();
-    let mut stmt = pool.prepare(r"INSERT INTO article(title, content, user_id, create_time) VALUES (?, ?, ?, ?)").unwrap();
-    let result = stmt.execute((title, content, user.id, now));
+    let mut stmt = pool.prepare(r"INSERT INTO article(category, title, content, user_id, create_time) VALUES (?, ?, ?, ?, ?)").unwrap();
+    let result = stmt.execute((category, title, content, user.id, now));
     result.unwrap();
     json_ok_response()
 }
 
 pub fn show(req: &mut Request) -> IronResult<Response> {
-    let mut article_id = 0;
+    let article_id;
     {
         let raw_article_id = req.extensions.get::<Router>().unwrap().find("article_id").unwrap();
         let wrapped_article_id = raw_article_id.parse::<u64>();
@@ -54,7 +57,7 @@ pub fn show(req: &mut Request) -> IronResult<Response> {
         article_id = wrapped_article_id.unwrap();
     }
     let pool = req.get::<Read<MyPool>>().unwrap().value();
-    let mut result = pool.prep_exec("SELECT a.id, a.title, a.content, a.create_time, \
+    let mut result = pool.prep_exec("SELECT a.id, a.category, a.title, a.content, a.create_time, \
                                      u.id as user_id, u.username, u.email from article \
                                      as a join user as u on a.user_id=u.id where a.id=?", (&article_id,)).unwrap();
 
@@ -63,9 +66,10 @@ pub fn show(req: &mut Request) -> IronResult<Response> {
         return not_found_response();
     }
     let row = raw_row.unwrap().unwrap();
-    let (id, title, content, create_time, user_id, username, email) = my::from_row(row);
+    let (id, category, title, content, create_time, user_id, username, email) = my::from_row(row);
     let article = Article {
         id: id,
+        category: Category::from_value(category),
         title: title,
         content: content,
         user: User{

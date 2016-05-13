@@ -21,3 +21,4 @@ chrono = "*"
 iron-login = "*"
 log = "*"
 log4rs = { version="*", features = ["yaml"] }
+lazy_static = "*"

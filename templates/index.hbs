@@ -5,7 +5,10 @@
         <div class="panel panel-default">
             <div class="panel-heading">
                 <ul class="nav nav-pills">
-                    <li role="presentation" class="active"><a href="#">全部</a></li>
+                    <li role="presentation" class="{{#if index}}active{{/if}}"><a href="/">全部</a></li>
+                    {{#each categories}}
+                        <li role="presentation" class="{{#if active}}active{{/if}}"><a href="/category/{{value}}">{{title}}</a></li>
+                    {{/each}}
                     {{#if login_user}}
                         <li role="presentation" class="active pull-right"><a href="/article/new">发布话题</li>
                     {{/if}}
@@ -24,8 +27,10 @@
                           <h4 class="media-heading"><a href="/article/{{id}}">{{title}}</a></h4>
                           <h5 class="media-heading">
                               <small>
-                                  <a href="#">学习资料</a>•
-                                  <a href="#">{{user.username}}</a>•
+                                  <a href="/category/{{category.value}}">{{category.title}}</a>
+                                  •
+                                  <a href="#">{{user.username}}</a>
+                                  •
                                   于{{create_time}}最后更新
                               </small>
                           </h5>

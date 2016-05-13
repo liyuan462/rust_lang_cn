@@ -1,4 +1,3 @@
-use std::fmt;
 use rustc_serialize::json::{Object, Json, ToJson, encode};
 use base::config::Config;
 use base::db::MyPool;
@@ -8,8 +7,6 @@ use hbsi::Template;
 use iron::status;
 use mysql as my;
 use iron_login::User;
-use iron::middleware;
-use std::error::Error;
 use iron::Url;
 use iron::modifiers::Redirect;
 use iron::Handler;

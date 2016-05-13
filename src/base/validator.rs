@@ -1,7 +1,5 @@
 use std::collections::HashMap;
-use std::str::FromStr;
 use std::ops::Shl;
-use std::fmt::Debug;
 use std::any::Any;
 use std::mem;
 
@@ -85,8 +83,8 @@ impl <A: FieldValueParser + FieldValue, B: FieldTypeWithValue<Value=A> + Clone +
 #[allow(dead_code)]
 #[derive(Clone)]
 pub enum Rule {
-    Max(i32),
-    Min(i32),
+    Max(i64),
+    Min(i64),
     Format(String),
     Optional,
     Multiple,
@@ -311,11 +309,17 @@ impl FieldTypeWithValue for Int {
     type Value = IntValue;
 }
 
-pub struct IntValue(i32);
+pub struct IntValue(i64);
+
+impl IntValue {
+    pub fn value(&self) -> i64 {
+        self.0
+    }
+}
 
 impl FieldValueParser for IntValue {
     fn parse(s: &str) -> Option<Self> {
-        s.parse::<i32>().map(|v| IntValue(v)).ok()
+        s.parse::<i64>().map(|v| IntValue(v)).ok()
     }
 }
 

@@ -2,11 +2,8 @@ use iron::prelude::*;
 use base::framework::{ResponseData, temp_response,
                       json_error_response, json_ok_response};
 use urlencoded::UrlEncodedBody;
-use base::validator::{Validator, Checker, Str, StrValue, Int, Max, Min};
-use std::any::Any;
-use rustc_serialize::json::{Object, Json, ToJson, encode};
+use base::validator::{Validator, Checker, Str, StrValue, Max, Min};
 use mysql as my;
-use mysql::error::Result as MyResult;
 use crypto::md5;
 use crypto::digest::Digest;
 use rand;

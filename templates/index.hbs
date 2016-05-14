@@ -9,9 +9,6 @@
                     {{#each categories}}
                         <li role="presentation" class="{{#if active}}active{{/if}}"><a href="/category/{{value}}">{{title}}</a></li>
                     {{/each}}
-                    {{#if login_user}}
-                        <li role="presentation" class="active pull-right"><a href="/article/new">发布话题</li>
-                    {{/if}}
                 </ul>
             </div>
               <ul class="list-group">
@@ -41,6 +38,11 @@
                   {{/each}}
               </ul>
         </div>
+      </div>
+      <div class="col-md-3">
+          {{#if login_user}}
+              {{~> new_article_btn ~}}
+          {{/if}}
       </div>
     </div>
   </div>

@@ -20,6 +20,11 @@
             </div>
         </div>
       </div>
+      <div class="col-md-3">
+          {{#if login_user}}
+              {{~> new_article_btn ~}}
+          {{/if}}
+      </div>
     </div>
   </div>
 {{/partial}}

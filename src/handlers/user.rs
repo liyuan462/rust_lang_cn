@@ -1,6 +1,6 @@
 use iron::prelude::*;
 use base::framework::{ResponseData, temp_response,
-                      json_error_response, json_ok_response};
+                      json_error_response, json_ok_response, not_found_response};
 use urlencoded::UrlEncodedBody;
 use base::validator::{Validator, Checker, Str, StrValue, Max, Min};
 use mysql as my;
@@ -12,7 +12,10 @@ use chrono::*;
 use base::db::MyPool;
 use persistent::Read;
 use base::framework::LoginUser;
-use iron_login::User;
+use iron_login::User as U;
+use base::model::User;
+use router::Router;
+use rustc_serialize::json::ToJson;
 
 pub fn register_load(req: &mut Request) -> IronResult<Response> {
     let data = ResponseData::new(req);
@@ -106,4 +109,25 @@ pub fn logout(req: &mut Request) -> IronResult<Response> {
     let mut resp = json_ok_response().unwrap();
     resp.set_mut(login.log_out());
     Ok(resp)
+}
+
+pub fn show(req: &mut Request) -> IronResult<Response> {
+    let user_id = try!(req.extensions.get::<Router>().unwrap()
+                       .find("user_id").unwrap()
+                       .parse::<u64>().map_err(|_| not_found_response().unwrap_err()));
+
+    let pool = req.get::<Read<MyPool>>().unwrap().value();
+
+    let row = try!(pool.prep_exec("SELECT id, username, email from user where id=?", (&user_id,)).unwrap()
+                   .next().map(|row|row.unwrap()).ok_or_else(|| not_found_response().unwrap_err()));
+
+    let (user_id, username, email) = my::from_row(row);
+    let user = User{
+        id: user_id,
+        username: username,
+        email: email,
+    };
+    let mut data = ResponseData::new(req);
+    data.insert("user", user.to_json());
+    temp_response("user/show", &data)
 }

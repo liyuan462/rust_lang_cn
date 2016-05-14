@@ -33,8 +33,8 @@ impl ResponseData {
     }
 
     #[allow(dead_code)]
-    pub fn insert(&mut self, key: String, value: Json) -> &mut Self {
-        self.0.insert(key, value);
+    pub fn insert(&mut self, key: &str, value: Json) -> &mut Self {
+        self.0.insert(key.to_owned(), value);
         self
     }
 }

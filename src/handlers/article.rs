@@ -16,7 +16,7 @@ use rustc_serialize::json::ToJson;
 
 pub fn new_load(req: &mut Request) -> IronResult<Response> {
     let mut data = ResponseData::new(req);
-    data.insert("categories".to_owned(), Category::all().to_json());
+    data.insert("categories", Category::all().to_json());
     temp_response("article/new_load", &data)
 }
 
@@ -47,15 +47,10 @@ pub fn new(req: &mut Request) -> IronResult<Response> {
 }
 
 pub fn show(req: &mut Request) -> IronResult<Response> {
-    let article_id;
-    {
-        let raw_article_id = req.extensions.get::<Router>().unwrap().find("article_id").unwrap();
-        let wrapped_article_id = raw_article_id.parse::<u64>();
-        if wrapped_article_id.is_err() {
-            return not_found_response();
-        }
-        article_id = wrapped_article_id.unwrap();
-    }
+    let article_id = try!(req.extensions.get::<Router>().unwrap()
+                       .find("article_id").unwrap()
+                       .parse::<u64>().map_err(|_| not_found_response().unwrap_err()));
+
     let pool = req.get::<Read<MyPool>>().unwrap().value();
     let mut result = pool.prep_exec("SELECT a.id, a.category, a.title, a.content, a.create_time, \
                                      u.id as user_id, u.username, u.email from article \
@@ -80,6 +75,6 @@ pub fn show(req: &mut Request) -> IronResult<Response> {
         create_time: create_time,
     };
     let mut data = ResponseData::new(req);
-    data.insert("article".to_owned(), article.to_json());
+    data.insert("article", article.to_json());
     temp_response("article/show", &data)
 }

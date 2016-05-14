@@ -28,22 +28,17 @@ pub fn index(req: &mut Request) -> IronResult<Response> {
         }
     }).collect();
     let mut data = ResponseData::new(req);
-    data.insert("articles".to_owned(), articles.to_json());
-    data.insert("categories".to_owned(), Category::all().to_json());
-    data.insert("index".to_owned(), 1.to_json());
+    data.insert("articles", articles.to_json());
+    data.insert("categories", Category::all().to_json());
+    data.insert("index", 1.to_json());
     temp_response("index", &data)
 }
 
 pub fn category(req: &mut Request) -> IronResult<Response> {
-    let category_id;
-    {
-        let raw_category_id = req.extensions.get::<Router>().unwrap().find("category_id").unwrap();
-        let wrapped_category_id = raw_category_id.parse::<u8>();
-        if wrapped_category_id.is_err() {
-            return not_found_response();
-        }
-        category_id = wrapped_category_id.unwrap();
-    }
+    let category_id = try!(req.extensions.get::<Router>().unwrap()
+                       .find("category_id").unwrap()
+                       .parse::<u8>().map_err(|_| not_found_response().unwrap_err()));
+
     let pool = req.get::<Read<MyPool>>().unwrap().value();
 
     let result = pool.prep_exec("SELECT a.id, a.category, a.title, a.content, a.create_time, \
@@ -66,8 +61,8 @@ pub fn category(req: &mut Request) -> IronResult<Response> {
         }
     }).collect();
     let mut data = ResponseData::new(req);
-    data.insert("articles".to_owned(), articles.to_json());
-    data.insert("categories".to_owned(), gen_categories_json_with_active_state(category_id));
+    data.insert("articles", articles.to_json());
+    data.insert("categories", gen_categories_json_with_active_state(category_id));
     temp_response("index", &data)
 }
 

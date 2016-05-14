@@ -26,7 +26,7 @@ pub fn new(req: &mut Request) -> IronResult<Response> {
     let mut validator = Validator::new();
     validator
         .add_checker(Checker::new("category", Int, "类别") << Min(0) << Max(2))
-        .add_checker(Checker::new("title", Str, "标题") << Min(3) << Max(48))
+        .add_checker(Checker::new("title", Str, "标题") << Min(3) << Max(64))
         .add_checker(Checker::new("content", Str, "内容") << Min(7));
 
     validator.validate(req.get::<UrlEncodedBody>());

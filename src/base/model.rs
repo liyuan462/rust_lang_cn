@@ -5,6 +5,7 @@ pub struct User {
     pub id: u64,
     pub username: String,
     pub email: String,
+    pub avatar: String,
 }
 
 impl ToJson for User {
@@ -13,6 +14,7 @@ impl ToJson for User {
         object.insert("id".to_owned(), self.id.to_json());
         object.insert("username".to_owned(), self.username.to_json());
         object.insert("email".to_owned(), self.email.to_json());
+        object.insert("avatar".to_owned(), self.avatar.to_json());
         object.to_json()
     }
 }
@@ -38,42 +40,6 @@ impl ToJson for Article {
         object.to_json()
     }
 }
-
-// #[derive(Clone)]
-// pub struct Category {
-//     pub value: i8,
-//     pub title: String,
-// }
-
-// impl ToJson for Category {
-//     fn to_json(&self) -> Json {
-//         let mut object = Object::new();
-//         object.insert("value".to_owned(), self.value.to_json());
-//         object.insert("title".to_owned(), self.title.to_json());
-//         object.to_json()
-//     }
-// }
-
-// impl<'a> ToJson for &'a Category {
-//     fn to_json(&self) -> Json {
-//         self.clone().to_json()
-//     }
-// }
-
-// impl Category {
-//     pub fn new(value: i8, title: &str) -> Category {
-//         Category {
-//             value: value,
-//             title: title.to_owned(),
-//         }
-//     }
-
-//     pub fn from(value: u8) -> Category {
-//         match value {
-
-//         }
-//     }
-// }
 
 pub enum Category {
     Resource,

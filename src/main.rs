@@ -18,6 +18,7 @@ extern crate log4rs;
 extern crate chrono;
 #[macro_use]
 extern crate lazy_static;
+extern crate pulldown_cmark;
 
 mod base;
 mod handlers;

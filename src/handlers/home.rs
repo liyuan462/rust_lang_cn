@@ -6,6 +6,7 @@ use base::model::{Article, User, Category};
 use mysql as my;
 use rustc_serialize::json::{Object, Array, Json, ToJson};
 use router::Router;
+use base::util::gen_gravatar_url;
 
 pub fn index(req: &mut Request) -> IronResult<Response> {
     let pool = req.get::<Read<MyPool>>().unwrap().value();
@@ -13,7 +14,7 @@ pub fn index(req: &mut Request) -> IronResult<Response> {
                                      u.id as user_id, u.username, u.email from article \
                                      as a join user as u on a.user_id=u.id", ()).unwrap();
     let articles: Vec<Article> = result.map(|x| x.unwrap()).map(|row| {
-        let (id, category, title, content, create_time, user_id, username, email) = my::from_row(row);
+        let (id, category, title, content, create_time, user_id, username, email) = my::from_row::<(_,_,_,_,_,_,_,String)>(row);
         Article {
             id: id,
             category: Category::from_value(category),
@@ -21,6 +22,7 @@ pub fn index(req: &mut Request) -> IronResult<Response> {
             content: content,
             user: User{
                 id: user_id,
+                avatar: gen_gravatar_url(&email),
                 username: username,
                 email: email,
             },
@@ -46,7 +48,8 @@ pub fn category(req: &mut Request) -> IronResult<Response> {
                                      as a join user as u on a.user_id=u.id where a.category=?", (category_id,)).unwrap();
 
     let articles: Vec<Article> = result.map(|x| x.unwrap()).map(|row| {
-        let (id, category, title, content, create_time, user_id, username, email) = my::from_row(row);
+        let (id, category, title, content, create_time, user_id, username, email) = my::from_row::<(_,_,_,_,_,_,_,String)>(row);
+        let avatar = gen_gravatar_url(&email);
         Article {
             id: id,
             category: Category::from_value(category),
@@ -56,6 +59,7 @@ pub fn category(req: &mut Request) -> IronResult<Response> {
                 id: user_id,
                 username: username,
                 email: email,
+                avatar: avatar,
             },
             create_time: create_time,
         }

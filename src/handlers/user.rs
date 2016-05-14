@@ -16,6 +16,7 @@ use iron_login::User as U;
 use base::model::User;
 use router::Router;
 use rustc_serialize::json::ToJson;
+use base::util::gen_gravatar_url;
 
 pub fn register_load(req: &mut Request) -> IronResult<Response> {
     let data = ResponseData::new(req);
@@ -121,9 +122,10 @@ pub fn show(req: &mut Request) -> IronResult<Response> {
     let row = try!(pool.prep_exec("SELECT id, username, email from user where id=?", (&user_id,)).unwrap()
                    .next().map(|row|row.unwrap()).ok_or_else(|| not_found_response().unwrap_err()));
 
-    let (user_id, username, email) = my::from_row(row);
+    let (user_id, username, email) = my::from_row::<(_,_,String)>(row);
     let user = User{
         id: user_id,
+        avatar: gen_gravatar_url(&email),
         username: username,
         email: email,
     };

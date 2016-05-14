@@ -7,13 +7,16 @@
                 <h4>{{ article.title }}</h4>
                 <h5>
                     <small>
-                        <a href="#">{{ article.user.username }}</a>•
-                        于{{ article.create_time}}最后更新
+                        <a href="/user/{{ article.user.id }}">{{ article.user.username }}</a>
+                        •
+                        <a href="/category/{{ article.category.value}}">{{article.category.title}}</a>
+                        •
+                        {{ article.create_time}}
                     </small>
                 </h5>
             </div>
             <div class="panel-body">
-                {{ article.content }}
+                {{{ article.content }}}
             </div>
         </div>
       </div>

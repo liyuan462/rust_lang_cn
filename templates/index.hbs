@@ -14,13 +14,12 @@
                     {{/if}}
                 </ul>
             </div>
-          <div class="panel-body">
-              <ul class="media-list">
+              <ul class="list-group">
                   {{#each articles}}
-                  <li class="media">
+                  <li class="media list-group-item">
                       <div class="media-left">
-                          <a href="#">
-                              <img class="media-object" src="{{ ../../static_path }}/images/default-avatar.png" style="width:64px;height:64px;">
+                          <a href="/user/{{user.id}}">
+                              <img class="media-object img-circle" src="{{ user.avatar }}" style="width:64px;height:64px;">
                           </a>
                       </div>
                       <div class="media-body">
@@ -41,7 +40,6 @@
                   </li>
                   {{/each}}
               </ul>
-          </div>
         </div>
       </div>
     </div>

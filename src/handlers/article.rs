@@ -6,6 +6,7 @@ use urlencoded::UrlEncodedBody;
 use base::db::MyPool;
 use base::validator::{Validator, Checker, Str, StrValue, Int, IntValue, Max, Min};
 use base::framework::LoginUser;
+use base::util::render_html;
 use iron_login::User as U;
 use persistent::Read;
 use chrono::*;
@@ -13,6 +14,7 @@ use router::Router;
 use mysql as my;
 use base::model::{Article, User, Category};
 use rustc_serialize::json::ToJson;
+use base::util::gen_gravatar_url;
 
 pub fn new_load(req: &mut Request) -> IronResult<Response> {
     let mut data = ResponseData::new(req);
@@ -61,19 +63,21 @@ pub fn show(req: &mut Request) -> IronResult<Response> {
         return not_found_response();
     }
     let row = raw_row.unwrap().unwrap();
-    let (id, category, title, content, create_time, user_id, username, email) = my::from_row(row);
-    let article = Article {
+    let (id, category, title, content, create_time, user_id, username, email) = my::from_row::<(_,_,_,_,_,_,_,String)>(row);
+    let mut article = Article {
         id: id,
         category: Category::from_value(category),
         title: title,
         content: content,
         user: User{
             id: user_id,
+            avatar: gen_gravatar_url(&email),
             username: username,
             email: email,
         },
         create_time: create_time,
     };
+    article.content = render_html(&article.content);
     let mut data = ResponseData::new(req);
     data.insert("article", article.to_json());
     temp_response("article/show", &data)

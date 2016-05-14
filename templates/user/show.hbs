@@ -7,7 +7,17 @@
                 <h3 class="panel-title">用户</h3>
             </div>
             <div class="panel-body">
-                {{ user.username }}
+                <div class="media">
+                    <div class="media-left">
+                        <a href="/user/{{ user.id }}">
+                            <img class="media-object img-circle" src="{{ user.avatar }}" alt="{{ user.username }}">
+                        </a>
+                    </div>
+                    <div class="media-body">
+                        <h4 class="media-heading">{{ user.username}}</h4>
+                        <h5 class="media-heading"><small>{{ user.email }}</small></h5>
+                    </div>
+                </div>
             </div>
         </div>
       </div>

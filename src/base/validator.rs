@@ -2,9 +2,9 @@ use std::collections::HashMap;
 use std::ops::Shl;
 use std::any::Any;
 use std::mem;
-
 use traitobject;
 use urlencoded::QueryResult;
+use regex::Regex;
 
 #[derive(Clone)]
 pub struct Checker {
@@ -85,7 +85,7 @@ impl <A: FieldValueParser + FieldValue, B: FieldTypeWithValue<Value=A> + Clone +
 pub enum Rule {
     Max(i64),
     Min(i64),
-    Format(String),
+    Format(&'static str),
     Optional,
     Multiple,
 }
@@ -293,6 +293,12 @@ impl FieldValue for StrValue {
             Min(min) => {
                 if self.0.len() < min as usize {
                     return Err(format!("长度不能小于{}", min));
+                }
+            },
+            Format(format) => {
+                let re = Regex::new(&format).unwrap();
+                if !re.is_match(&self.0) {
+                    return Err(format!("格式不正确"));
                 }
             },
             _ => {},

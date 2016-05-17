@@ -19,6 +19,7 @@ extern crate chrono;
 #[macro_use]
 extern crate lazy_static;
 extern crate pulldown_cmark;
+extern crate regex;
 
 mod base;
 mod handlers;
@@ -42,9 +43,8 @@ fn main() {
     let my_pool = MyPool::new(&config);
     chain.link_before(Read::<MyPool>::one(my_pool));
 
-    // TODO: read key from configuration file.
-    let cookie_signing_key = b"test"[..].to_owned();
-    chain.link_around(iron_login::LoginManager::new(cookie_signing_key));
+    let cookie_sign_key = config.get("cookie_sign_key").as_str().unwrap().as_bytes().to_owned();
+    chain.link_around(iron_login::LoginManager::new(cookie_sign_key));
 
     let mut hbse = HandlebarsEngine::new();
     hbse.add(Box::new(DirectorySource::new("templates/", ".hbs")));

@@ -2,42 +2,46 @@
   <div class="container">
     <div class="row">
       <div class="col-md-9">
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <ul class="nav nav-pills">
-                    <li role="presentation" class="{{#if index}}active{{/if}}"><a href="/">全部</a></li>
-                    {{#each categories}}
-                        <li role="presentation" class="{{#if active}}active{{/if}}"><a href="/category/{{value}}">{{title}}</a></li>
-                    {{/each}}
-                </ul>
-            </div>
+          <div class="panel panel-default">
+              <div class="panel-heading">
+                  <ul class="nav nav-pills">
+                      <li role="presentation" class="{{#if index}}active{{/if}}"><a href="/">全部</a></li>
+                      {{#each categories}}
+                          <li role="presentation" class="{{#if active}}active{{/if}}"><a href="/category/{{value}}">{{title}}</a></li>
+                      {{/each}}
+                  </ul>
+              </div>
               <ul class="list-group">
                   {{#each articles}}
-                  <li class="media list-group-item">
-                      <div class="media-left">
-                          <a href="/user/{{user.id}}">
-                              <img class="media-object img-circle" src="{{ user.avatar }}" style="width:64px;height:64px;">
-                          </a>
-                      </div>
-                      <div class="media-body">
-                          <h4 class="media-heading"><a href="/article/{{id}}">{{title}}</a></h4>
-                          <h5 class="media-heading">
-                              <small>
-                                  <a href="/category/{{category.value}}">{{category.title}}</a>
-                                  •
-                                  <a href="/user/{{user.id}}">{{user.username}}</a>
-                                  •
-                                  于{{create_time}}最后更新
-                              </small>
-                          </h5>
-                      </div>
-                      <div class="media-right media-middle">
-                          <h4><span class="label label-default">0</span></h4>
-                      </div>
-                  </li>
+                      <li class="media list-group-item">
+                          <div class="media-left">
+                              <a href="/user/{{user.id}}">
+                                  <img class="media-object img-circle" src="{{ user.avatar }}" style="width:48px;height:48px;">
+                              </a>
+                          </div>
+                          <div class="media-body">
+                              <h4 class="media-heading"><a href="/article/{{id}}">{{title}}</a></h4>
+                              <h5 class="media-heading">
+                                  <small>
+                                      <a href="/category/{{category.value}}">{{category.title}}</a>
+                                      •
+                                      <a href="/user/{{user.id}}">{{user.username}}</a>
+                                      •
+                                      {{create_time}}
+                                  </small>
+                              </h5>
+                          </div>
+                          <div class="media-right media-middle">
+                              {{#if comments_count}}
+                                  <h4><span class="label label-primary">{{comments_count}}</span></h4>
+                              {{else}}
+                                  <h4><span class="label label-default">{{comments_count}}</span></h4>
+                              {{/if}}
+                          </div>
+                      </li>
                   {{/each}}
               </ul>
-        </div>
+          </div>
       </div>
       <div class="col-md-3">
           {{#if login_user}}

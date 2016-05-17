@@ -12,9 +12,10 @@ use persistent::Read;
 use chrono::*;
 use router::Router;
 use mysql as my;
-use base::model::{Article, User, Category};
+use base::model::{Article, User, Category, Comment};
 use rustc_serialize::json::ToJson;
 use base::util::gen_gravatar_url;
+use base::constant;
 
 pub fn new_load(req: &mut Request) -> IronResult<Response> {
     let mut data = ResponseData::new(req);
@@ -54,7 +55,7 @@ pub fn show(req: &mut Request) -> IronResult<Response> {
                        .parse::<u64>().map_err(|_| not_found_response().unwrap_err()));
 
     let pool = req.get::<Read<MyPool>>().unwrap().value();
-    let mut result = pool.prep_exec("SELECT a.id, a.category, a.title, a.content, a.create_time, \
+    let mut result = pool.prep_exec("SELECT a.id, a.category, a.title, a.content, a.comments_count, a.create_time, \
                                      u.id as user_id, u.username, u.email from article \
                                      as a join user as u on a.user_id=u.id where a.id=?", (&article_id,)).unwrap();
 
@@ -63,22 +64,47 @@ pub fn show(req: &mut Request) -> IronResult<Response> {
         return not_found_response();
     }
     let row = raw_row.unwrap().unwrap();
-    let (id, category, title, content, create_time, user_id, username, email) = my::from_row::<(_,_,_,_,_,_,_,String)>(row);
+    let (id, category, title, content, comments_count, create_time, user_id, username, email) = my::from_row::<(_,_,_,_,_,_,_,_,String)>(row);
     let mut article = Article {
         id: id,
         category: Category::from_value(category),
         title: title,
         content: content,
+        comments_count: comments_count,
         user: User{
             id: user_id,
             avatar: gen_gravatar_url(&email),
             username: username,
             email: email,
+            create_time: *constant::DEFAULT_DATETIME,
         },
         create_time: create_time,
+        comments: Vec::new(),
     };
     article.content = render_html(&article.content);
+
+    let result = pool.prep_exec("SELECT c.id, c.content, c.create_time, u.id as user_id, u.username, u.email from comment \
+                                     as c join user as u on c.user_id=u.id where c.article_id=?", (&article_id, )).unwrap();
+
+    article.comments = result.map(|x| x.unwrap()).map(|row|{
+        let (id, content, create_time, user_id, username, email) = my::from_row::<(_,String,_,_,_,String)>(row);
+        Comment {
+            id: id,
+            content: render_html(&content),
+            user: User {
+                id: user_id,
+                avatar: gen_gravatar_url(&email),
+                username: username,
+                email: email,
+                create_time: *constant::DEFAULT_DATETIME,
+            },
+            create_time: create_time,
+        }
+    }).collect();
+
     let mut data = ResponseData::new(req);
     data.insert("article", article.to_json());
+    let mentions: Vec<String> = article.comments.into_iter().map(|c|c.user.username).collect();
+    data.insert("mentions", mentions.to_json());
     temp_response("article/show", &data)
 }

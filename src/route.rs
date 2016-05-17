@@ -15,5 +15,6 @@ pub fn gen_router() -> Router {
     router.get("/article/:article_id", handlers::article::show);
     router.get("/category/:category_id", handlers::home::category);
     router.get("/user/:user_id", handlers::user::show);
+    router.post("/comment/new", user_required(handlers::comment::new));
     router
 }

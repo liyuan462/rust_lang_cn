@@ -2,7 +2,7 @@ use iron::prelude::*;
 use base::framework::{ResponseData, temp_response,
                       json_error_response, json_ok_response, not_found_response};
 use urlencoded::UrlEncodedBody;
-use base::validator::{Validator, Checker, Str, StrValue, Max, Min};
+use base::validator::{Validator, Checker, Str, StrValue, Max, Min, Format};
 use mysql as my;
 use crypto::md5;
 use crypto::digest::Digest;
@@ -13,10 +13,11 @@ use base::db::MyPool;
 use persistent::Read;
 use base::framework::LoginUser;
 use iron_login::User as U;
-use base::model::User;
+use base::model::{User, Article, Category};
 use router::Router;
 use rustc_serialize::json::ToJson;
 use base::util::gen_gravatar_url;
+use base::constant;
 
 pub fn register_load(req: &mut Request) -> IronResult<Response> {
     let data = ResponseData::new(req);
@@ -25,9 +26,10 @@ pub fn register_load(req: &mut Request) -> IronResult<Response> {
 
 pub fn register(req: &mut Request) -> IronResult<Response> {
     let mut validator = Validator::new();
+
     validator
-        .add_checker(Checker::new("username", Str, "用户名") << Min(3) << Max(32))
-        .add_checker(Checker::new("email", Str, "邮箱") << Min(5) << Max(64))
+        .add_checker(Checker::new("username", Str, "用户名") << Min(3) << Max(32) << Format(r"^[a-zA-Z_][\da-zA-Z_]{2,}$"))
+        .add_checker(Checker::new("email", Str, "邮箱") << Min(5) << Max(64) << Format(r"^[^@]+@[^@]+\.[^@]+$"))
         .add_checker(Checker::new("password", Str, "密码") << Min(8) << Max(32));
 
     validator.validate(req.get::<UrlEncodedBody>());
@@ -119,17 +121,48 @@ pub fn show(req: &mut Request) -> IronResult<Response> {
 
     let pool = req.get::<Read<MyPool>>().unwrap().value();
 
-    let row = try!(pool.prep_exec("SELECT id, username, email from user where id=?", (&user_id,)).unwrap()
+    let row = try!(pool.prep_exec("SELECT id, username, email, create_time from user where id=?", (&user_id,)).unwrap()
                    .next().map(|row|row.unwrap()).ok_or_else(|| not_found_response().unwrap_err()));
 
-    let (user_id, username, email) = my::from_row::<(_,_,String)>(row);
+    let (user_id, username, email, create_time) = my::from_row::<(_,_,String,_)>(row);
     let user = User{
         id: user_id,
         avatar: gen_gravatar_url(&email),
         username: username,
         email: email,
+        create_time: create_time,
     };
+
+    // get articles
+    let articles: Vec<Article> = pool.prep_exec("SELECT id, category, title, content, comments_count, create_time from article where user_id=?", (user_id,)).unwrap().map(|x| x.unwrap()).map(|row| {
+        let (id, category, title, content, comments_count, create_time) = my::from_row(row);
+        Article {
+            id: id,
+            category: Category::from_value(category),
+            title: title,
+            content: content,
+            comments_count: comments_count,
+            user: User{id:0, username:String::new(), email:String::new(), avatar:String::new(), create_time: *constant::DEFAULT_DATETIME},
+            create_time: create_time,
+            comments: Vec::new(),
+        }
+    }).collect();
+
+    // judge whether is myself
+    let mut is_myself = false;
+    let raw_login_user = LoginUser::get_login(req).get_user();
+    if let Some(login_user) = raw_login_user {
+        if login_user.id == user.id {
+            is_myself = true;
+        }
+    }
+
     let mut data = ResponseData::new(req);
     data.insert("user", user.to_json());
+    // user register date
+    data.insert("register_date", user.create_time.format("%Y-%m-%d").to_string().to_json());
+    data.insert("articles_count", articles.len().to_json());
+    data.insert("articles", articles.to_json());
+    data.insert("is_myself", is_myself.to_json());
     temp_response("user/show", &data)
 }

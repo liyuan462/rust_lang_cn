@@ -8,11 +8,12 @@ use mysql::QueryResult;
 use rustc_serialize::json::{Object, Array, Json, ToJson};
 use router::Router;
 use base::util::gen_gravatar_url;
+use base::constant;
 
 pub fn index(req: &mut Request) -> IronResult<Response> {
     let pool = req.get::<Read<MyPool>>().unwrap().value();
 
-    let result = pool.prep_exec("SELECT a.id, a.category, a.title, a.content, a.create_time, \
+    let result = pool.prep_exec("SELECT a.id, a.category, a.title, a.content, a.comments_count, a.create_time, \
                                  u.id as user_id, u.username, u.email from article \
                                  as a join user as u on a.user_id=u.id", ()).unwrap();
 
@@ -30,7 +31,7 @@ pub fn category(req: &mut Request) -> IronResult<Response> {
 
     let pool = req.get::<Read<MyPool>>().unwrap().value();
 
-    let result = pool.prep_exec("SELECT a.id, a.category, a.title, a.content, a.create_time, \
+    let result = pool.prep_exec("SELECT a.id, a.category, a.title, a.content, a.comments_count, a.create_time, \
                                      u.id as user_id, u.username, u.email from article \
                                      as a join user as u on a.user_id=u.id where a.category=?", (category_id,)).unwrap();
 
@@ -39,19 +40,22 @@ pub fn category(req: &mut Request) -> IronResult<Response> {
 
 fn index_data(req: &mut Request, result: QueryResult, raw_category_id: Option<u8>) -> IronResult<Response> {
     let articles: Vec<Article> = result.map(|x| x.unwrap()).map(|row| {
-        let (id, category, title, content, create_time, user_id, username, email) = my::from_row::<(_,_,_,_,_,_,_,String)>(row);
+        let (id, category, title, content, comments_count, create_time, user_id, username, email) = my::from_row::<(_,_,_,_,_,_,_,_,String)>(row);
         Article {
             id: id,
             category: Category::from_value(category),
             title: title,
             content: content,
+            comments_count: comments_count,
             user: User{
                 id: user_id,
                 avatar: gen_gravatar_url(&email),
                 username: username,
                 email: email,
+                create_time: *constant::DEFAULT_DATETIME,
             },
             create_time: create_time,
+            comments: Vec::new(),
         }
     }).collect();
 

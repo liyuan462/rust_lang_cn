@@ -14,12 +14,52 @@
                         </a>
                     </div>
                     <div class="media-body">
-                        <h4 class="media-heading">{{ user.username}}</h4>
-                        <h5 class="media-heading"><small>{{ user.email }}</small></h5>
+                        <h3 class="media-heading">{{ user.username}}</h3>
+                        {{#if is_myself}}
+                            <h4 class="media-heading"><small>{{ user.email }}</small></h4>
+                        {{/if}}
+                        <h4 class="media-heading"><small>
+                            第 {{ user.id }} 位会员
+                            •
+                            {{ register_date }}
+                        </small></h4>
+                        <h4 class="media-heading"><small>{{ articles_count }} 个话题</small></h4>
                     </div>
                 </div>
             </div>
         </div>
+
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <ul class="nav nav-pills">
+                    <li role="presentation" class="active"><a href="/user/{{user.id}}">{{#if is_myself}}我{{else}}Ta{{/if}}的话题</a></li>
+                </ul>
+            </div>
+            <ul class="list-group">
+                {{#each articles}}
+                    <li class="media list-group-item">
+                        <div class="media-body">
+                            <h4 class="media-heading"><a href="/article/{{id}}">{{title}}</a></h4>
+                            <h5 class="media-heading">
+                                <small>
+                                    <a href="/category/{{category.value}}">{{category.title}}</a>
+                                    •
+                                    {{create_time}}
+                                </small>
+                            </h5>
+                        </div>
+                        <div class="media-right media-middle">
+                            {{#if comments_count}}
+                                <h4><span class="label label-primary">{{comments_count}}</span></h4>
+                            {{else}}
+                                <h4><span class="label label-default">{{comments_count}}</span></h4>
+                            {{/if}}
+                        </div>
+                    </li>
+                {{/each}}
+            </ul>
+        </div>
+
       </div>
     </div>
   </div>

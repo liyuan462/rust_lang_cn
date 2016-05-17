@@ -3,7 +3,8 @@
     <div class="row">
       <div class="col-md-9">
         <div class="panel panel-default">
-            <div class="panel-heading">
+            <div class="panel-heading media">
+                <div class="media-body">
                 <h4>{{ article.title }}</h4>
                 <h5>
                     <small>
@@ -14,11 +15,60 @@
                         {{ article.create_time}}
                     </small>
                 </h5>
+                </div>
+                <div class="media-right">
+                    <a href="/user/{{article.user.id}}"><img class="media-object img-circle" src="{{ article.user.avatar }}" style="width:48px;height:48px;"></a>
+                </div>
             </div>
             <div class="panel-body">
                 {{{ article.content }}}
             </div>
         </div>
+
+        <div class="panel panel-default">
+            <div class="panel-heading">回复</div>
+              <ul class="list-group">
+                  {{#each article.comments }}
+                  <li class="media list-group-item">
+                      <div class="media-left">
+                          <a href="/user/{{user.id}}">
+                              <img class="media-object img-circle" src="{{ user.avatar }}" style="width:48px;height:48px;">
+                          </a>
+                      </div>
+                      <div class="media-body">
+                          <h5 class="media-heading">
+                              <small>
+                                  <a href="/user/{{user.id}}">{{user.username}}</a>
+                                  •
+                                  {{create_time}}
+                              </small>
+                          </h5>
+                          {{{ content }}}
+                      </div>
+                  </li>
+                  {{/each}}
+              </ul>
+        </div>
+
+        {{#if login_user}}
+            <div class="panel panel-default">
+                <div class="panel-heading">回帖</div>
+                <div class="panel-body">
+                    <form class="form" method="post" action="/comment/new" id="newCommentForm">
+                        <div class="form-group">
+                            <textarea name="content" rows="7" id="comment-area" data-provide="markdown"></textarea>
+                        </div>
+                        <input type="hidden" name="article_id" value="{{article.id}}">
+                        <div class="form-group hidden text-danger" id="error">
+                        </div>
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-default">回复</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        {{/if}}
+
       </div>
       <div class="col-md-3">
           {{#if login_user}}
@@ -29,7 +79,42 @@
   </div>
 {{/partial}}
 {{#partial footer_js}}
+    <script src="{{ static_path  }}/js/markdown.js"></script>
+    <script src="{{ static_path  }}/js/to-markdown.js"></script>
+    <script src="{{ static_path  }}/js/bootstrap-markdown.js"></script>
+    <script src="{{ static_path  }}/js/jquery.textcomplete.js"></script>
+
     <script>
+     {{#if login_user}}
+     $('#newCommentForm').ajaxForm({
+         success: function(data) {
+             if (data.status == 1) {
+                 $('#error').text(data.message);
+                 $('#error').removeClass('hidden').addClass('show');
+             } else if (data.status == 302) {
+                 window.location.replace(data.redirect_url);
+             } else if (data.status == 0) {
+                 window.location.reload();
+             }
+         }
+     });
+
+     $("#comment-area").textcomplete([
+         {
+             mentions: [{{#each mentions}}'{{this}}'{{#if @last}}{{else}},{{/if}}{{/each}}],
+             match: /\B@(\w*)$/,
+             search: function (term, callback) {
+                 callback($.map(this.mentions, function (mention) {
+                     return mention.indexOf(term) === 0 ? mention : null;
+                 }));
+             },
+             index: 1,
+             replace: function (mention) {
+                 return '@' + mention + ' ';
+             }
+         }
+     ]);
+     {{/if}}
     </script>
 {{/partial}}
 {{~> base~}}

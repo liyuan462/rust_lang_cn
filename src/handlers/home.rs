@@ -17,7 +17,7 @@ pub fn index(req: &mut Request) -> IronResult<Response> {
                                  u.id as user_id, u.username, u.email from article \
                                  as a join user as u on a.user_id=u.id", ()).unwrap();
 
-    index_data(req, result, None)
+    index_data(req, &pool, result, None)
 }
 
 pub fn category(req: &mut Request) -> IronResult<Response> {
@@ -35,10 +35,10 @@ pub fn category(req: &mut Request) -> IronResult<Response> {
                                      u.id as user_id, u.username, u.email from article \
                                      as a join user as u on a.user_id=u.id where a.category=?", (category_id,)).unwrap();
 
-    index_data(req, result, Some(category_id))
+    index_data(req, &pool, result, Some(category_id))
 }
 
-fn index_data(req: &mut Request, result: QueryResult, raw_category_id: Option<u8>) -> IronResult<Response> {
+fn index_data(req: &mut Request, pool: &my::Pool, result: QueryResult, raw_category_id: Option<u8>) -> IronResult<Response> {
     let articles: Vec<Article> = result.map(|x| x.unwrap()).map(|row| {
         let (id, category, title, content, comments_count, create_time, user_id, username, email) = my::from_row::<(_,_,_,_,_,_,_,_,String)>(row);
         Article {
@@ -59,8 +59,14 @@ fn index_data(req: &mut Request, result: QueryResult, raw_category_id: Option<u8
         }
     }).collect();
 
+    // get statistics info
+    let users_count = my::from_row::<usize>(pool.prep_exec("SELECT count(id) as count from user", ()).unwrap().next().unwrap().unwrap());
+    let articles_count = my::from_row::<usize>(pool.prep_exec("SELECT count(id) as count from article", ()).unwrap().next().unwrap().unwrap());
     let mut data = ResponseData::new(req);
     data.insert("articles", articles.to_json());
+    data.insert("users_count", users_count.to_json());
+    data.insert("articles_count", articles_count.to_json());
+
     if let Some(category_id) = raw_category_id {
         data.insert("categories", gen_categories_json_with_active_state(category_id));
     } else {

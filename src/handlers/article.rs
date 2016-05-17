@@ -104,6 +104,7 @@ pub fn show(req: &mut Request) -> IronResult<Response> {
 
     let mut data = ResponseData::new(req);
     data.insert("article", article.to_json());
+    data.insert("comments_count", article.comments.len().to_json());
     let mentions: Vec<String> = article.comments.into_iter().map(|c|c.user.username).collect();
     data.insert("mentions", mentions.to_json());
     temp_response("article/show", &data)

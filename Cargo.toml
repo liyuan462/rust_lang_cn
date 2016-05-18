@@ -24,3 +24,4 @@ log4rs = { version="*", features = ["yaml"] }
 lazy_static = "*"
 pulldown-cmark = "*"
 regex = "*"
+ammonia = "*"

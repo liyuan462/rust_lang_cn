@@ -20,6 +20,7 @@ extern crate chrono;
 extern crate lazy_static;
 extern crate pulldown_cmark;
 extern crate regex;
+extern crate ammonia;
 
 mod base;
 mod handlers;

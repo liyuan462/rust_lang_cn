@@ -2,12 +2,13 @@ use pulldown_cmark::Parser;
 use pulldown_cmark::html;
 use crypto::md5;
 use crypto::digest::Digest;
+use ammonia::clean;
 
 pub fn render_html(text: &str) -> String {
     let mut s = String::with_capacity(text.len() * 3 / 2);
     let p = Parser::new(&text);
     html::push_html(&mut s, p);
-    s
+    clean(&*s).to_owned()
 }
 
 pub fn gen_gravatar_url(email: &str) -> String {

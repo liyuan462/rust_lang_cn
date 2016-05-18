@@ -38,9 +38,10 @@
             {{#if login_user}}
               <li role="presentation" class="dropdown">
                 <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
-                  {{login_user}} <span class="caret"></span>
+                  {{login_user.username}} <span class="caret"></span>
                 </a>
                 <ul class="dropdown-menu">
+                  <li><a href="/user/{{login_user.id}}">个人中心</a></li>
                   <li><a href="javascript:void(0)" id="logoutBtn">退出</a></li>
                 </ul>
               </li>

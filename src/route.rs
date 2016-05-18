@@ -13,6 +13,8 @@ pub fn gen_router() -> Router {
     router.get("/article/new", user_required(handlers::article::new_load));
     router.post("/article/new", user_required(handlers::article::new));
     router.get("/article/:article_id", handlers::article::show);
+    router.get("/article/:article_id/edit", user_required(handlers::article::edit_load));
+    router.post("/article/:article_id/edit", user_required(handlers::article::edit));
     router.get("/category/:category_id", handlers::home::category);
     router.get("/user/:user_id", handlers::user::show);
     router.post("/comment/new", user_required(handlers::comment::new));

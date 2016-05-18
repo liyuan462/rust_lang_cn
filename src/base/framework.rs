@@ -24,11 +24,11 @@ impl ResponseData {
                     config.get("static_path").as_str().unwrap().to_string().to_json());
         let login = LoginUser::get_login(req);
         let raw_user = login.get_user();
-        let mut username = Json::Null;
-        if let Some(LoginUser{id: _, username: name, email: _}) = raw_user {
-            username = Json::String(name)
+        let mut login_user = Json::Null;
+        if let Some(login_u) = raw_user {
+            login_user = login_u.to_json();
         }
-        data.insert("login_user".to_owned(), username);
+        data.insert("login_user".to_owned(), login_user);
         ResponseData(data)
     }
 
@@ -128,6 +128,16 @@ impl LoginUser {
             username: username.to_owned(),
             email: email.to_owned()
         }
+    }
+}
+
+impl ToJson for LoginUser {
+    fn to_json(&self) -> Json {
+        let mut object = Object::new();
+        object.insert("id".to_owned(), self.id.to_json());
+        object.insert("username".to_owned(), self.username.to_json());
+        object.insert("email".to_owned(), self.email.to_json());
+        object.to_json()
     }
 }
 

@@ -74,6 +74,15 @@
           {{#if login_user}}
               {{~> new_article_btn ~}}
           {{/if}}
+
+          {{#if is_my_own}}
+              <div class="panel panel-default">
+                  <div class="panel-body">
+                      <a class="btn btn-primary" href="/article/{{article.id}}/edit">编辑话题</a>
+                  </div>
+              </div>
+          {{/if}}
+
       </div>
     </div>
   </div>

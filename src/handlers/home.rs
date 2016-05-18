@@ -5,10 +5,11 @@ use persistent::Read;
 use base::model::{Article, User, Category};
 use mysql as my;
 use mysql::QueryResult;
-use rustc_serialize::json::{Object, Array, Json, ToJson};
+use rustc_serialize::json::ToJson;
 use router::Router;
 use base::util::gen_gravatar_url;
 use base::constant;
+use base::util;
 
 pub fn index(req: &mut Request) -> IronResult<Response> {
     let pool = req.get::<Read<MyPool>>().unwrap().value();
@@ -68,24 +69,10 @@ fn index_data(req: &mut Request, pool: &my::Pool, result: QueryResult, raw_categ
     data.insert("articles_count", articles_count.to_json());
 
     if let Some(category_id) = raw_category_id {
-        data.insert("categories", gen_categories_json_with_active_state(category_id));
+        data.insert("categories", util::gen_categories_json_with_active_state(category_id));
     } else {
         data.insert("categories", Category::all().to_json());
         data.insert("index", 1.to_json());
     }
     temp_response("index", &data)
-}
-
-fn gen_categories_json_with_active_state(active_value: u8) -> Json {
-    let mut categories = Array::new();
-
-    for category in &Category::all() {
-        let mut object = Object::new();
-        object.insert("value".to_owned(), category.get_value().to_json());
-        object.insert("title".to_owned(), category.get_title().to_json());
-        object.insert("active".to_owned(), (if category.get_value() == active_value {1} else {0}).to_json());
-        categories.push(object.to_json());
-    }
-
-    categories.to_json()
 }

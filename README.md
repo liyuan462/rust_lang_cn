@@ -1,6 +1,7 @@
 # rust_lang_cn
-China Community for Rust lang
+**China Community for Rust lang**
 
+### 如何运行
 如果要在本地搭建[Rust China](http://rust-lang-cn.org/)测试环境，请参见以下步骤：
 
 1. clone本仓库到本地

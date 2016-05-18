@@ -1,5 +1,5 @@
 app_path = "http://localhost"
-static_path = "http://localhost"
+static_path = "http://localhost/static"
 cookie_sign_key = "test"
 
 [database]

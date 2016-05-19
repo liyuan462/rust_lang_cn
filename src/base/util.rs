@@ -10,7 +10,11 @@ pub fn render_html(text: &str) -> String {
     let mut s = String::with_capacity(text.len() * 3 / 2);
     let p = Parser::new(&text);
     html::push_html(&mut s, p);
-    clean(&*s).to_owned()
+    let mut cleaner = Ammonia::default();
+    let mut code_attributes = HashSet::new();
+    code_attributes.insert("class");
+    cleaner.tag_attributes.insert("code", code_attributes);
+    cleaner.clean(&*s).to_owned()
 }
 
 pub fn gen_gravatar_url(email: &str) -> String {

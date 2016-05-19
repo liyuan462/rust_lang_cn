@@ -5936,6 +5936,9 @@ button.close {
   position: fixed;
   width: 100%; }
 
+body {
+  padding-bottom: 5px; }
+
 .list-group-item.media {
   margin-top: 0; }
 

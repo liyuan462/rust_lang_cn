@@ -3,6 +3,10 @@ $navbar-default-bg: #fff;
 
 @import "bootstrap";
 
+body {
+    padding-bottom: 10px;
+}
+
 .list-group-item.media {
     margin-top: 0;
 }

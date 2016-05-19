@@ -2,7 +2,8 @@ use pulldown_cmark::Parser;
 use pulldown_cmark::html;
 use crypto::md5;
 use crypto::digest::Digest;
-use ammonia::clean;
+use std::collections::HashSet;
+use ammonia::Ammonia;
 use rustc_serialize::json::{Object, Json, Array, ToJson};
 use base::model::Category;
 

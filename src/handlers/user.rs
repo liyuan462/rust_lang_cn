@@ -134,7 +134,7 @@ pub fn show(req: &mut Request) -> IronResult<Response> {
     };
 
     // get articles
-    let articles: Vec<Article> = pool.prep_exec("SELECT id, category, title, content, comments_count, create_time from article where user_id=?", (user_id,)).unwrap().map(|x| x.unwrap()).map(|row| {
+    let articles: Vec<Article> = pool.prep_exec("SELECT id, category, title, content, comments_count, create_time from article where status=? and user_id=? order by create_time desc", (constant::ARTICLE_STATUS::NORMAL, user_id)).unwrap().map(|x| x.unwrap()).map(|row| {
         let (id, category, title, content, comments_count, create_time) = my::from_row(row);
         Article {
             id: id,

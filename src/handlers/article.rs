@@ -4,7 +4,7 @@ use base::framework::{ResponseData, temp_response,
                       not_found_response};
 use urlencoded::UrlEncodedBody;
 use base::db::MyPool;
-use base::validator::{Validator, Checker, Str, StrValue, Int, IntValue, Max, Min};
+use base::validator::{Validator, Checker, Str, StrValue, Int, IntValue, Max, Min, Lambda};
 use base::framework::LoginUser;
 use base::util::render_html;
 use iron_login::User as U;
@@ -17,17 +17,20 @@ use rustc_serialize::json::ToJson;
 use base::util;
 use base::util::gen_gravatar_url;
 use base::constant;
+use std::sync::Arc;
 
 pub fn new_load(req: &mut Request) -> IronResult<Response> {
     let mut data = ResponseData::new(req);
-    data.insert("categories", Category::all().to_json());
+    data.insert("categories", util::gen_categories_json(None));
     temp_response("article/new_load", &data)
 }
 
 pub fn new(req: &mut Request) -> IronResult<Response> {
     let mut validator = Validator::new();
     validator
-        .add_checker(Checker::new("category", Int, "类别") << Min(0) << Max(2))
+        .add_checker(Checker::new("category", Int, "类别") << Lambda(Box::new(Arc::new(|v| {
+            !(constant::CATEGORY::ALL.iter().find(|c|**c as i64 == v.downcast_ref_unchecked::<IntValue>().value()).is_none())
+        }))))
         .add_checker(Checker::new("title", Str, "标题") << Min(3) << Max(64))
         .add_checker(Checker::new("content", Str, "内容") << Min(7));
 
@@ -58,7 +61,8 @@ pub fn show(req: &mut Request) -> IronResult<Response> {
     let pool = req.get::<Read<MyPool>>().unwrap().value();
     let mut result = pool.prep_exec("SELECT a.id, a.category, a.title, a.content, a.comments_count, a.create_time, \
                                      u.id as user_id, u.username, u.email from article \
-                                     as a join user as u on a.user_id=u.id where a.id=?", (&article_id,)).unwrap();
+                                     as a join user as u on a.user_id=u.id where a.id=? and a.status=?",
+                                    (&article_id, constant::ARTICLE_STATUS::NORMAL)).unwrap();
 
     let raw_row = result.next();
     if raw_row.is_none() {
@@ -132,7 +136,8 @@ pub fn edit_load(req: &mut Request) -> IronResult<Response> {
     let pool = req.get::<Read<MyPool>>().unwrap().value();
     let mut result = pool.prep_exec("SELECT a.id, a.category, a.title, a.content, a.comments_count, a.create_time, \
                                      u.id as user_id, u.username, u.email from article \
-                                     as a join user as u on a.user_id=u.id where a.id=?", (&article_id,)).unwrap();
+                                     as a join user as u on a.user_id=u.id where a.id=? and a.status=?",
+                                    (&article_id, constant::ARTICLE_STATUS::NORMAL)).unwrap();
 
     let raw_row = result.next();
     if raw_row.is_none() {
@@ -164,7 +169,7 @@ pub fn edit_load(req: &mut Request) -> IronResult<Response> {
 
     let mut data = ResponseData::new(req);
 
-    data.insert("categories", util::gen_categories_json_with_active_state(category));
+    data.insert("categories", util::gen_categories_json(Some(category)));
     data.insert("article", article.to_json());
     temp_response("article/edit_load", &data)
 }
@@ -179,7 +184,9 @@ pub fn edit(req: &mut Request) -> IronResult<Response> {
 
     let mut validator = Validator::new();
     validator
-        .add_checker(Checker::new("category", Int, "类别") << Min(0) << Max(2))
+        .add_checker(Checker::new("category", Int, "类别") << Lambda(Box::new(Arc::new(|v| {
+            !(constant::CATEGORY::ALL.iter().find(|c|**c as i64 == v.downcast_ref_unchecked::<IntValue>().value()).is_none())
+        }))))
         .add_checker(Checker::new("title", Str, "标题") << Min(3) << Max(64))
         .add_checker(Checker::new("content", Str, "内容") << Min(7));
 
@@ -197,7 +204,8 @@ pub fn edit(req: &mut Request) -> IronResult<Response> {
 
     {
         let mut result = trans.prep_exec("SELECT u.id as user_id from article \
-                                        as a join user as u on a.user_id=u.id where a.id=? for update", (article_id,)).unwrap();
+                                          as a join user as u on a.user_id=u.id where a.id=? and a.status=? for update",
+                                         (article_id, constant::ARTICLE_STATUS::NORMAL)).unwrap();
 
         let raw_row = result.next();
         if raw_row.is_none() {

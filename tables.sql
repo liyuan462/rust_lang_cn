@@ -18,6 +18,8 @@ CREATE TABLE `article` (
   `user_id` int(11) NOT NULL,
   `comments_count` int(11) NOT NULL DEFAULT '0',
   `create_time` datetime NOT NULL,
+  `status` tinyint(4) NOT NULL DEFAULT '0',
+  `priority` tinyint(4) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`),
   FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)

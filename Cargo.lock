@@ -4,6 +4,7 @@ version = "0.1.0"
 dependencies = [
  "ammonia 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "chrono 0.2.22 (registry+https://github.com/rust-lang/crates.io-index)",
+ "grabbag_macros 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "handlebars-iron 0.15.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "hyper 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "iron 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",

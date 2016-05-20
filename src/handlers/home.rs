@@ -16,7 +16,8 @@ pub fn index(req: &mut Request) -> IronResult<Response> {
 
     let result = pool.prep_exec("SELECT a.id, a.category, a.title, a.content, a.comments_count, a.create_time, \
                                  u.id as user_id, u.username, u.email from article \
-                                 as a join user as u on a.user_id=u.id", ()).unwrap();
+                                 as a join user as u on a.user_id=u.id where a.status=? order by a.priority desc, a.create_time desc",
+                                (constant::ARTICLE_STATUS::NORMAL,)).unwrap();
 
     index_data(req, &pool, result, None)
 }
@@ -24,9 +25,9 @@ pub fn index(req: &mut Request) -> IronResult<Response> {
 pub fn category(req: &mut Request) -> IronResult<Response> {
     let category_id = try!(req.extensions.get::<Router>().unwrap()
                        .find("category_id").unwrap()
-                       .parse::<u8>().map_err(|_| not_found_response().unwrap_err()));
+                       .parse::<i8>().map_err(|_| not_found_response().unwrap_err()));
 
-    if Category::all().into_iter().find(|c|c.get_value() == category_id).is_none() {
+    if constant::CATEGORY::ALL.iter().find(|c|**c == category_id).is_none() {
         return not_found_response();
     }
 
@@ -34,12 +35,12 @@ pub fn category(req: &mut Request) -> IronResult<Response> {
 
     let result = pool.prep_exec("SELECT a.id, a.category, a.title, a.content, a.comments_count, a.create_time, \
                                      u.id as user_id, u.username, u.email from article \
-                                     as a join user as u on a.user_id=u.id where a.category=?", (category_id,)).unwrap();
+                                     as a join user as u on a.user_id=u.id where a.status=? and a.category=? order by a.priority desc, a.create_time desc", (constant::ARTICLE_STATUS::NORMAL, category_id)).unwrap();
 
     index_data(req, &pool, result, Some(category_id))
 }
 
-fn index_data(req: &mut Request, pool: &my::Pool, result: QueryResult, raw_category_id: Option<u8>) -> IronResult<Response> {
+fn index_data(req: &mut Request, pool: &my::Pool, result: QueryResult, raw_category_id: Option<i8>) -> IronResult<Response> {
     let articles: Vec<Article> = result.map(|x| x.unwrap()).map(|row| {
         let (id, category, title, content, comments_count, create_time, user_id, username, email) = my::from_row::<(_,_,_,_,_,_,_,_,String)>(row);
         Article {
@@ -48,7 +49,7 @@ fn index_data(req: &mut Request, pool: &my::Pool, result: QueryResult, raw_categ
             title: title,
             content: content,
             comments_count: comments_count,
-            user: User{
+            user: User {
                 id: user_id,
                 avatar: gen_gravatar_url(&email),
                 username: username,
@@ -69,9 +70,9 @@ fn index_data(req: &mut Request, pool: &my::Pool, result: QueryResult, raw_categ
     data.insert("articles_count", articles_count.to_json());
 
     if let Some(category_id) = raw_category_id {
-        data.insert("categories", util::gen_categories_json_with_active_state(category_id));
+        data.insert("categories", util::gen_categories_json(Some(category_id)));
     } else {
-        data.insert("categories", Category::all().to_json());
+        data.insert("categories", util::gen_categories_json(None));
         data.insert("index", 1.to_json());
     }
     temp_response("index", &data)

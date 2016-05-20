@@ -5,7 +5,7 @@ use crypto::digest::Digest;
 use std::collections::HashSet;
 use ammonia::Ammonia;
 use rustc_serialize::json::{Object, Json, Array, ToJson};
-use base::model::Category;
+use base::constant;
 
 pub fn render_html(text: &str) -> String {
     let mut s = String::with_capacity(text.len() * 3 / 2);
@@ -24,14 +24,16 @@ pub fn gen_gravatar_url(email: &str) -> String {
     "https://cdn.v2ex.com/gravatar/".to_owned() + &sh.result_str()
 }
 
-pub fn gen_categories_json_with_active_state(active_value: u8) -> Json {
+pub fn gen_categories_json(raw_active_value: Option<i8>) -> Json {
     let mut categories = Array::new();
 
-    for category in &Category::all() {
+    for value in constant::CATEGORY::ALL.iter() {
         let mut object = Object::new();
-        object.insert("value".to_owned(), category.get_value().to_json());
-        object.insert("title".to_owned(), category.get_title().to_json());
-        object.insert("active".to_owned(), (if category.get_value() == active_value {1} else {0}).to_json());
+        object.insert("value".to_owned(), value.to_json());
+        object.insert("title".to_owned(), constant::CATEGORY::TITLES.get(&value).unwrap().to_owned().to_json());
+        if let Some(active_value) = raw_active_value {
+            object.insert("active".to_owned(), (if *value == active_value {1} else {0}).to_json());
+        }
         categories.push(object.to_json());
     }
 

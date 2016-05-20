@@ -5,6 +5,7 @@ use std::mem;
 use traitobject;
 use urlencoded::QueryResult;
 use regex::Regex;
+use std::sync::Arc;
 
 #[derive(Clone)]
 pub struct Checker {
@@ -32,7 +33,7 @@ impl Clone for Box<FieldType> {
     }
 }
 
-pub trait FieldValueParser: Sized {
+pub trait FieldValueParser: Clone {
     fn parse(s: &str) -> Option<Self>;
 }
 
@@ -41,8 +42,10 @@ pub trait FieldValue: Any + 'static {
 }
 
 impl FieldValue {
-    pub unsafe fn downcast_ref_unchecked<T: FieldValue>(&self) -> &T {
-        mem::transmute(traitobject::data(self))
+    pub fn downcast_ref_unchecked<T: FieldValue>(&self) -> &T {
+        unsafe {
+            mem::transmute(traitobject::data(self))
+        }
     }
 }
 
@@ -62,9 +65,24 @@ pub trait FieldTypeWithValue {
     }
 
     fn check_value(&self, checker: &Checker, value: Self::Value) -> Result<Self::Value, String> {
+        let mut lambda: Option<Box<Arc<Fn(Box<FieldValue>) -> bool>>> = None;
         for rule in &checker.rules {
+            match rule.clone() {
+                Lambda(l) => {
+                    lambda = Some(l);
+                    continue;
+                },
+                _ => {},
+            }
             if let Err(msg) = value.match_rule(rule) {
                 return Err(format!("{}{}", checker.field_title, msg));
+            }
+        }
+
+        if lambda.is_some() {
+            let f = *lambda.unwrap();
+            if !f(Box::new(value.clone())) {
+                return Err(format!("{}{}", checker.field_title, "格式不正确"))
             }
         }
 
@@ -86,6 +104,7 @@ pub enum Rule {
     Max(i64),
     Min(i64),
     Format(&'static str),
+    Lambda(Box<Arc<Fn(Box<FieldValue>) -> bool>>),
     Optional,
     Multiple,
 }
@@ -199,9 +218,7 @@ impl Validator {
     }
 
     pub fn get_valid<T: FieldValue>(&self, name: &str) -> &T {
-        unsafe {
-            self.valid_data.get(name).unwrap()[0].downcast_ref_unchecked::<T>()
-        }
+        self.valid_data.get(name).unwrap()[0].downcast_ref_unchecked::<T>()
     }
 
     pub fn add_checker(&mut self, checker: Checker) -> &mut Self {
@@ -315,6 +332,7 @@ impl FieldTypeWithValue for Int {
     type Value = IntValue;
 }
 
+#[derive(Clone)]
 pub struct IntValue(i64);
 
 impl IntValue {

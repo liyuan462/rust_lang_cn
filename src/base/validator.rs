@@ -3,7 +3,7 @@ use std::ops::Shl;
 use std::any::Any;
 use std::mem;
 use traitobject;
-use urlencoded::QueryResult;
+use urlencoded::{QueryResult, QueryMap};
 use regex::Regex;
 use std::sync::Arc;
 
@@ -232,41 +232,39 @@ impl Validator {
             return;
         }
 
-        match query {
-            Ok(query_map) => {
-                for checker in &self.checkers {
-                    let (multiple_values, value) = match query_map.get(&checker.field_name) {
-                        Some(values) => (Some(values.clone()), Some(values[0].clone())),
-                        None => (None::<Vec<String>>,  None::<String>)
-                    };
+        let query_map = match query {
+            Ok(q) => q,
+            Err(_) => QueryMap::new(),
+        };
 
-                    if checker.multiple {
-                        match checker.check_multiple(multiple_values) {
-                            Ok(Some(values)) => {
-                                self.valid_data.insert(checker.field_name.clone(), values);
-                            },
-                            Err(e) => {
-                                self.messages.push(e);
-                            },
-                            _ => {},
-                        }
-                    } else {
-                        match checker.check(value) {
-                            Ok(Some(field_value)) => {
-                                self.valid_data.insert(checker.field_name.clone(), vec![field_value]);
-                            },
-                            Err(e) => {
-                                self.messages.push(e);
-                            },
-                            _ => {},
-                        }
-                    }
+        for checker in &self.checkers {
+            let (multiple_values, value) = match query_map.get(&checker.field_name) {
+                Some(values) => (Some(values.clone()), Some(values[0].clone())),
+                None => (None::<Vec<String>>,  None::<String>)
+            };
 
+            if checker.multiple {
+                match checker.check_multiple(multiple_values) {
+                    Ok(Some(values)) => {
+                        self.valid_data.insert(checker.field_name.clone(), values);
+                    },
+                    Err(e) => {
+                        self.messages.push(e);
+                    },
+                    _ => {},
                 }
-            },
-            Err(_) => {
-                self.messages.push("参数不合法".to_string());
-            },
+            } else {
+                match checker.check(value) {
+                    Ok(Some(field_value)) => {
+                        self.valid_data.insert(checker.field_name.clone(), vec![field_value]);
+                    },
+                    Err(e) => {
+                        self.messages.push(e);
+                    },
+                    _ => {},
+                }
+            }
+
         }
     }
 

@@ -42,6 +42,24 @@
                       </li>
                   {{/each}}
               </ul>
+
+              {{#if page_count}}
+                  <ul class="pagination">
+                      <li>
+                          <a href="{{#if index}}/{{else}}/category/{{category}}{{/if}}?page={{previous_page}}" aria-label="Previous">
+                              <span aria-hidden="true">&laquo;</span>
+                          </a>
+                      </li>
+                      {{#each pages}}
+                      <li class="{{#if active}}active{{/if}}"><a href="{{#if ../../index}}/{{else}}/category/{{../../category}}{{/if}}?page={{page}}">{{page}}</a></li>
+                      {{/each}}
+                      <li>
+                          <a href="{{#if index}}/{{else}}/category/{{category}}{{/if}}?page={{next_page}}" aria-label="Next">
+                              <span aria-hidden="true">&raquo;</span>
+                          </a>
+                      </li>
+                  </ul>
+              {{/if}}
           </div>
       </div>
       <div class="col-md-3">

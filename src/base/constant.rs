@@ -39,3 +39,5 @@ pub mod CATEGORY {
     }
 
 }
+
+pub const PAGE_SIZE: usize = 15;

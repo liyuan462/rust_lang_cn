@@ -5937,9 +5937,12 @@ button.close {
   width: 100%; }
 
 body {
-  padding-bottom: 5px; }
+  padding-bottom: 10px; }
 
 .list-group-item.media {
   margin-top: 0; }
+
+.pagination {
+  padding-left: 10px; }
 
 /*# sourceMappingURL=base.css.map */

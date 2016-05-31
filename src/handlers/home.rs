@@ -113,7 +113,8 @@ fn index_data(req: &mut Request, pool: &my::Pool, page: usize, page_count: usize
     let users_count = my::from_row::<usize>(pool.prep_exec("SELECT count(id) as count from user", ()).unwrap().next().unwrap().unwrap());
     let articles_count = my::from_row::<usize>(pool.prep_exec("SELECT count(id) as count from article", ()).unwrap().next().unwrap().unwrap());
     let mut data = ResponseData::new(req);
-    data.insert("page_count", page_count.to_json());
+    let show_pagination = if page_count > 1 {true} else {false};
+    data.insert("show_pagination", show_pagination.to_json());
     data.insert("pages", gen_pages_json(page_count, page));
     data.insert("previous_page",
                 (if page - 1 < 1 {1} else {page - 1}).to_json());

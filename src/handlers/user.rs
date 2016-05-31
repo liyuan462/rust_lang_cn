@@ -148,6 +148,10 @@ pub fn show(req: &mut Request) -> IronResult<Response> {
         }
     }).collect();
 
+    // where is me among all members
+    let which_member = my::from_row::<usize>(pool.prep_exec("SELECT count(id) as count from user where id < ?", (user_id,))
+                                       .unwrap().next().unwrap().unwrap()) + 1;
+
     // judge whether is myself
     let mut is_myself = false;
     let raw_login_user = LoginUser::get_login(req).get_user();
@@ -161,6 +165,7 @@ pub fn show(req: &mut Request) -> IronResult<Response> {
     data.insert("user", user.to_json());
     // user register date
     data.insert("register_date", user.create_time.format("%Y-%m-%d").to_string().to_json());
+    data.insert("which_member", which_member.to_json());
     data.insert("articles_count", articles.len().to_json());
     data.insert("articles", articles.to_json());
     data.insert("is_myself", is_myself.to_json());

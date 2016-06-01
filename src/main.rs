@@ -30,7 +30,6 @@ mod route;
 
 use iron::Chain;
 use hbsi::{HandlebarsEngine, DirectorySource};
-use std::error::Error;
 use persistent::Read;
 use base::config::Config;
 use base::db::MyPool;
@@ -51,11 +50,7 @@ fn main() {
 
     let mut hbse = HandlebarsEngine::new();
     hbse.add(Box::new(DirectorySource::new("templates/", ".hbs")));
-
-    if let Err(r) = hbse.reload() {
-        panic!("{}", r.description());
-    }
-
+    hbse.reload().unwrap();
     chain.link_after(hbse);
 
     iron::Iron::new(chain).http("0.0.0.0:3000").unwrap();

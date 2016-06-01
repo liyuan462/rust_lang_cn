@@ -24,7 +24,11 @@
                             •
                             {{ register_date }}
                         </small></h4>
-                        <h4 class="media-heading"><small>{{ articles_count }} 个话题</small></h4>
+                        <h4 class="media-heading"><small>
+                            {{ articles_count }} 个话题
+                            •
+                            {{ comments_count }} 个回帖
+                        </small></h4>
                     </div>
                 </div>
             </div>
@@ -33,10 +37,12 @@
         <div class="panel panel-default">
             <div class="panel-heading">
                 <ul class="nav nav-pills">
-                    <li role="presentation" class="active"><a href="/user/{{user.id}}">{{#if is_myself}}我{{else}}Ta{{/if}}的话题</a></li>
+                    <li role="presentation" class="{{#if articles}}active{{/if}}"><a href="/user/{{user.id}}">{{#if is_myself}}我{{else}}Ta{{/if}}的话题</a></li>
+                    <li role="presentation" class="{{#if comments}}active{{/if}}"><a href="/user/{{user.id}}/comments">{{#if is_myself}}我{{else}}Ta{{/if}}的回帖</a></li>
                 </ul>
             </div>
             <ul class="list-group">
+                {{#if articles}}
                 {{#each articles}}
                     <li class="media list-group-item">
                         <div class="media-body">
@@ -58,6 +64,21 @@
                         </div>
                     </li>
                 {{/each}}
+                {{/if}}
+                {{#if comments}}
+                {{#each comments}}
+                    <li class="media list-group-item">
+                        <div class="media-body">
+                            <h4 class="media-heading"><a href="/article/{{article.id}}">{{article.title}}</a> <small><small>{{create_time}}</small></small></h4>
+                            <h5 class="media-heading">
+                                <small>
+                                    {{{content}}}
+                                </small>
+                            </h5>
+                        </div>
+                    </li>
+                {{/each}}
+                {{/if}}
             </ul>
         </div>
 

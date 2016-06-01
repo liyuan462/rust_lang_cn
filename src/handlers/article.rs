@@ -104,6 +104,7 @@ pub fn show(req: &mut Request) -> IronResult<Response> {
                 create_time: *constant::DEFAULT_DATETIME,
             },
             create_time: create_time,
+            article: None,
         }
     }).collect();
 

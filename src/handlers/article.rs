@@ -88,8 +88,11 @@ pub fn show(req: &mut Request) -> IronResult<Response> {
     };
     article.content = render_html(&article.content);
 
-    let result = pool.prep_exec("SELECT c.id, c.content, c.create_time, u.id as user_id, u.username, u.email from comment \
-                                     as c join user as u on c.user_id=u.id where c.article_id=?", (&article_id, )).unwrap();
+    let result = pool.prep_exec(
+        "SELECT c.id, c.content, c.create_time, u.id as user_id, \
+         u.username, u.email from comment \
+         as c join user as u on c.user_id=u.id where c.article_id=? \
+         order by c.create_time", (&article_id, )).unwrap();
 
     article.comments = result.map(|x| x.unwrap()).map(|row|{
         let (id, content, create_time, user_id, username, email) = my::from_row::<(_,String,_,_,_,String)>(row);

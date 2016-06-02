@@ -37,8 +37,8 @@
         <div class="panel panel-default">
             <div class="panel-heading">
                 <ul class="nav nav-pills">
-                    <li role="presentation" class="{{#if articles}}active{{/if}}"><a href="/user/{{user.id}}">{{#if is_myself}}我{{else}}Ta{{/if}}的话题</a></li>
-                    <li role="presentation" class="{{#if comments}}active{{/if}}"><a href="/user/{{user.id}}/comments">{{#if is_myself}}我{{else}}Ta{{/if}}的回帖</a></li>
+                    <li role="presentation" class="{{#if articles_active}}active{{/if}}"><a href="/user/{{user.id}}">{{#if is_myself}}我{{else}}Ta{{/if}}的话题</a></li>
+                    <li role="presentation" class="{{#if comments_active}}active{{/if}}"><a href="/user/{{user.id}}/comments">{{#if is_myself}}我{{else}}Ta{{/if}}的回帖</a></li>
                 </ul>
             </div>
             <ul class="list-group">

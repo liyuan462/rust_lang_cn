@@ -171,6 +171,7 @@ pub fn show(req: &mut Request) -> IronResult<Response> {
         }).collect();
 
     data.insert("articles", articles.to_json());
+    data.insert("articles_active", true.to_json());
     temp_response("user/show", &data)
 }
 
@@ -218,6 +219,7 @@ pub fn show_comments(req: &mut Request) -> IronResult<Response> {
         }).collect();
 
     data.insert("comments", comments.to_json());
+    data.insert("comments_active", true.to_json());
     temp_response("user/show", &data)
 }
 

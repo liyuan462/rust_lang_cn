@@ -41,3 +41,17 @@ pub mod CATEGORY {
 }
 
 pub const PAGE_SIZE: usize = 15;
+
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+pub mod MESSAGE {
+    pub mod MODE {
+        pub const REPLY_ARTICLE: i8 = 1;       // 文章下面回复
+        pub const MENTION: i8 = 2;             // 在回复中提到某人
+    }
+
+    pub mod STATUS {
+        pub const INIT: i8 = 0;                // 初始
+        pub const READ: i8 = 1;                // 已读
+    }
+}

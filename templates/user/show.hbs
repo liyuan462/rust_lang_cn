@@ -39,6 +39,9 @@
                 <ul class="nav nav-pills">
                     <li role="presentation" class="{{#if articles_active}}active{{/if}}"><a href="/user/{{user.id}}">{{#if is_myself}}我{{else}}Ta{{/if}}的话题</a></li>
                     <li role="presentation" class="{{#if comments_active}}active{{/if}}"><a href="/user/{{user.id}}/comments">{{#if is_myself}}我{{else}}Ta{{/if}}的回帖</a></li>
+                    {{#if is_myself}}
+                    <li role="presentation" class="{{#if messages_active}}active{{/if}}"><a href="/user/{{user.id}}/messages">我的消息{{#if unread_messages_count}} <span class="badge">{{unread_messages_count}}</span>{{/if}}</a></li>
+                    {{/if}}
                 </ul>
             </div>
             <ul class="list-group">
@@ -76,6 +79,30 @@
                                 </small>
                             </h5>
                         </div>
+                    </li>
+                {{/each}}
+                {{/if}}
+                {{#if messages}}
+                {{#each messages}}
+                    <li class="media list-group-item">
+                        <div class="media-left">
+                            <a href="/user/{{user_id}}">
+                                <img class="media-object img-circle" src="{{ avatar }}" style="width:36px;height:36px;">
+                            </a>
+                        </div>
+                        <div class="media-body">
+                            <h4 class="media-heading"><small><small><a href="/user/{{user_id}}">{{username}}</a> 在</small></small> <a href="/article/{{article_id}}">{{article_title}}</a> <small><small>中回复了你</small></small> <small><small>{{create_time}}</small></small></h4>
+                            <h5 class="media-heading">
+                                <small>
+                                    {{{content}}}
+                                </small>
+                            </h5>
+                        </div>
+                        {{#if is_new}}
+                            <div class="media-right media-middle">
+                                <span class="label label-primary">New</span>
+                            </div>
+                        {{/if}}
                     </li>
                 {{/each}}
                 {{/if}}

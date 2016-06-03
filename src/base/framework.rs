@@ -114,7 +114,7 @@ pub fn json_redirect_response(redirect_url: &str) -> IronResult<Response> {
     json_response(JsonStatus::Redirect, "", Object::new(), redirect_url)
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct LoginUser {
     pub id: u64,
     pub username: String,

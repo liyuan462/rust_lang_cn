@@ -66,6 +66,13 @@
           {{#if login_user}}
               {{~> new_article_btn ~}}
           {{/if}}
+          {{#if unread_messages_count}}
+              <div class="panel panel-default">
+                  <div class="panel-body">
+                      <a href="/user/{{login_user.id}}/messages">未读消息 <span class="badge">{{unread_messages_count}}</span></a>
+                  </div>
+              </div>
+          {{/if}}
           {{~> stat ~}}
       </div>
     </div>

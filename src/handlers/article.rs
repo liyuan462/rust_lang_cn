@@ -224,8 +224,8 @@ pub fn edit(req: &mut Request) -> IronResult<Response> {
         }
     }
 
-    trans.prep_exec(r"UPDATE article set category=?, title=?, content=? where id=?",
-                        (category, title, content, article_id)).unwrap();
+    trans.prep_exec("UPDATE article set category=?, title=?, content=? where id=?",
+                    (category, title, content, article_id)).unwrap();
 
 
     trans.commit().unwrap();

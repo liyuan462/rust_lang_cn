@@ -38,3 +38,23 @@ CREATE TABLE `comment` (
   FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+CREATE TABLE `message` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `article_id` int(11) DEFAULT NULL,
+  `comment_id` int(11) DEFAULT NULL,
+  `from_user_id` int(11) DEFAULT NULL,
+  `to_user_id` int(11) NOT NULL,
+  `content` text,
+  `mode` tinyint(4) NOT NULL DEFAULT '0',
+  `status` tinyint(4) NOT NULL DEFAULT '0',
+  `create_time` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `article_id` (`article_id`),
+  KEY `from` (`from_user_id`),
+  KEY `to` (`to_user_id`),
+  KEY `comment_id` (`comment_id`),
+  FOREIGN KEY (`article_id`) REFERENCES `article` (`id`),
+  FOREIGN KEY (`from_user_id`) REFERENCES `user` (`id`),
+  FOREIGN KEY (`to_user_id`) REFERENCES `user` (`id`),
+  FOREIGN KEY (`comment_id`) REFERENCES `comment` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;

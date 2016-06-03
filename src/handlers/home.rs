@@ -12,6 +12,8 @@ use base::constant;
 use base::util;
 use urlencoded::UrlEncodedQuery;
 use base::validator::{Validator, Checker, Int, IntValue, Min, Optional};
+use base::framework::LoginUser;
+use iron_login::User as U;
 
 pub fn index(req: &mut Request) -> IronResult<Response> {
     let mut validator = Validator::new();
@@ -112,6 +114,7 @@ fn index_data(req: &mut Request, pool: &my::Pool, page: usize, page_count: usize
     // get statistics info
     let users_count = my::from_row::<usize>(pool.prep_exec("SELECT count(id) as count from user", ()).unwrap().next().unwrap().unwrap());
     let articles_count = my::from_row::<usize>(pool.prep_exec("SELECT count(id) as count from article", ()).unwrap().next().unwrap().unwrap());
+
     let mut data = ResponseData::new(req);
     let show_pagination = if page_count > 1 {true} else {false};
     data.insert("show_pagination", show_pagination.to_json());
@@ -132,6 +135,17 @@ fn index_data(req: &mut Request, pool: &my::Pool, page: usize, page_count: usize
         data.insert("categories", util::gen_categories_json(None));
         data.insert("index", 1.to_json());
     }
+
+    // get unread messages
+    let mut unread_messages_count:usize = 0;
+    let raw_login_user = LoginUser::get_login(req).get_user();
+    if let Some(login_user) = raw_login_user {
+        unread_messages_count = my::from_row(pool.prep_exec(
+            "SELECT count(id) as count from message where to_user_id=? and status=?",
+            (login_user.id, constant::MESSAGE::STATUS::INIT))
+            .unwrap().next().unwrap().unwrap());
+    }
+    data.insert("unread_messages_count", unread_messages_count.to_json());
     temp_response("index", &data)
 }
 

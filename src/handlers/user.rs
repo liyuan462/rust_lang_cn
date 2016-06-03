@@ -15,7 +15,7 @@ use base::framework::LoginUser;
 use iron_login::User as U;
 use base::model::{User, Article, Category, Comment};
 use router::Router;
-use rustc_serialize::json::ToJson;
+use rustc_serialize::json::{Object, Json, ToJson};
 use base::util::gen_gravatar_url;
 use base::util::render_html;
 use base::constant;
@@ -142,9 +142,11 @@ pub fn show(req: &mut Request) -> IronResult<Response> {
     let pool = req.get::<Read<MyPool>>().unwrap().value();
     let mut data = ResponseData::new(req);
 
-    if get_general_info(&mut data, &pool, user_id, login_user).is_err() {
+    if get_general_info(&mut data, &pool, user_id, login_user.clone()).is_err() {
         return not_found_response();
     }
+
+    get_unread_messages_count(&mut data, &pool, user_id, login_user);
 
     // get articles
     let articles: Vec<Article> = pool.prep_exec(
@@ -185,9 +187,11 @@ pub fn show_comments(req: &mut Request) -> IronResult<Response> {
     let pool = req.get::<Read<MyPool>>().unwrap().value();
     let mut data = ResponseData::new(req);
 
-    if get_general_info(&mut data, &pool, user_id, login_user).is_err() {
+    if get_general_info(&mut data, &pool, user_id, login_user.clone()).is_err() {
         return not_found_response();
     }
+
+    get_unread_messages_count(&mut data, &pool, user_id, login_user);
 
     // get comments
     let comments: Vec<Comment> = pool.prep_exec(
@@ -220,6 +224,68 @@ pub fn show_comments(req: &mut Request) -> IronResult<Response> {
 
     data.insert("comments", comments.to_json());
     data.insert("comments_active", true.to_json());
+    temp_response("user/show", &data)
+}
+
+pub fn show_messages(req: &mut Request) -> IronResult<Response> {
+    let user_id = try!(req.extensions.get::<Router>().unwrap()
+                       .find("user_id").unwrap()
+                       .parse::<u64>().map_err(|_| not_found_response().unwrap_err()));
+
+    let login_user = LoginUser::get_login(req).get_user();
+
+    if login_user.clone().unwrap().id != user_id {
+        return not_found_response();
+    }
+
+    let pool = req.get::<Read<MyPool>>().unwrap().value();
+    let mut data = ResponseData::new(req);
+
+    if get_general_info(&mut data, &pool, user_id, login_user).is_err() {
+        return not_found_response();
+    }
+
+    // get messages
+    let messages: Vec<Json> = pool.prep_exec(
+        "SELECT m.status, m.create_time, c.content, u.id as user_id, u.username, \
+         u.email, a.id as article_id, a.title as article_title \
+         from message as m join user as u on m.from_user_id=u.id \
+         join article as a on a.id=m.article_id \
+         join comment as c on c.id=m.comment_id \
+         where to_user_id=? order by create_time desc",
+        (user_id,))
+        .unwrap()
+        .map(|x| x.unwrap())
+        .map(|row| {
+            let (status, create_time, content, user_id, username, email,
+                 article_id, article_title)
+                = my::from_row::<(
+                    i8, NaiveDateTime, String, u64,
+                    String, String, u64, String)>(row);
+
+            let mut object = Object::new();
+            object.insert("is_new".to_owned(),
+                          (if status == constant::MESSAGE::STATUS::INIT {true}
+                           else {false}).to_json());
+            object.insert("create_time".to_owned(), create_time.format(
+                "%Y-%m-%d %H:%M:%S").to_string().to_json());
+            object.insert("content".to_owned(), render_html(&content).to_json());
+            object.insert("user_id".to_owned(), user_id.to_json());
+            object.insert("username".to_owned(), username.to_json());
+            object.insert("avatar".to_owned(), gen_gravatar_url(&email).to_json());
+            object.insert("article_id".to_owned(), article_id.to_json());
+            object.insert("article_title".to_owned(), article_title.to_json());
+            object.to_json()
+        }).collect();
+
+    // mark messages as read
+    pool.prep_exec("UPDATE message set status=? where to_user_id=? and status=?",
+                   (constant::MESSAGE::STATUS::READ,
+                    user_id,
+                    constant::MESSAGE::STATUS::INIT)).unwrap();
+
+    data.insert("messages", messages.to_json());
+    data.insert("messages_active", true.to_json());
     temp_response("user/show", &data)
 }
 
@@ -277,4 +343,24 @@ fn get_general_info(data: &mut ResponseData,
     data.insert("comments_count", comments_count.to_json());
     data.insert("is_myself", is_myself.to_json());
     Ok(())
+}
+
+fn get_unread_messages_count(data: &mut ResponseData, pool: &my::Pool,
+                             user_id: u64, raw_login_user: Option<LoginUser>) {
+
+    if raw_login_user.is_none() {
+        return;
+    }
+
+    let login_user = raw_login_user.unwrap();
+
+    if login_user.id != user_id {
+        return;
+    }
+
+    let unread_messages_count = my::from_row::<usize>(pool.prep_exec(
+        "SELECT count(id) as count from message where to_user_id=? and status=?",
+        (login_user.id, constant::MESSAGE::STATUS::INIT)).unwrap()
+                                                    .next().unwrap().unwrap());
+    data.insert("unread_messages_count", unread_messages_count.to_json());
 }

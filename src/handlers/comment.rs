@@ -73,18 +73,19 @@ pub fn new(req: &mut Request) -> IronResult<Response> {
                     (article_id,)).unwrap();
 
     // send message to article's author
-    trans.prep_exec("INSERT INTO message(article_id, comment_id, \
-                     from_user_id, to_user_id, mode, \
-                    status, create_time) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                   (article_id, comment_id, user.id, article_user_id,
-                    constant::MESSAGE::MODE::REPLY_ARTICLE,
-                    constant::MESSAGE::STATUS::INIT, now)).unwrap();
+    if article_user_id != user.id {
+        trans.prep_exec("INSERT INTO message(article_id, comment_id, \
+                         from_user_id, to_user_id, mode, \
+                         status, create_time) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                        (article_id, comment_id, user.id, article_user_id,
+                         constant::MESSAGE::MODE::REPLY_ARTICLE,
+                         constant::MESSAGE::STATUS::INIT, now)).unwrap();
+    }
 
     // send message to mentions
-    for mention in mentions {
-        if mention == article_user_id {
-            continue;
-        }
+    mentions.sort();
+    mentions.dedup();
+    for mention in mentions.iter().filter(|&x| *x != article_user_id && *x != user.id) {
         trans.prep_exec("INSERT INTO message(article_id, comment_id, \
                          from_user_id, to_user_id, mode, \
                          status, create_time) VALUES (?, ?, ?, ?, ?, ?, ?)",

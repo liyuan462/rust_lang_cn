@@ -105,7 +105,17 @@
 
     <script>
      {{#if login_user}}
+     var is_ajaxing = false;
      $('#newCommentForm').ajaxForm({
+         beforeSend: function() {
+             if (is_ajaxing) {
+                 return false;
+             }
+             is_ajaxing = true;
+         },
+         complete: function() {
+             is_ajaxing = false;
+         },
          success: function(data) {
              if (data.status == 1) {
                  $('#error').text(data.message);

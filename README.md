@@ -32,5 +32,4 @@ sass base.scss ../../static/css/base.css
 
 ### TODO
 
-* AJAX防重复提交
 * 邮箱验证

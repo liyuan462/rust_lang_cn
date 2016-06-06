@@ -1068,7 +1068,7 @@ html {
   -webkit-tap-highlight-color: transparent; }
 
 body {
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Helvetica Neue", Helvetica, Arial, "PingFang SC", "Hiragino Sans GB", "Source Han Sans CN", Roboto, "Heiti SC", "Microsoft Yahei", sans-serif;
   font-size: 14px;
   line-height: 1.42857;
   color: #333333;
@@ -5185,7 +5185,7 @@ button.close {
   position: absolute;
   z-index: 1070;
   display: block;
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Helvetica Neue", Helvetica, Arial, "PingFang SC", "Hiragino Sans GB", "Source Han Sans CN", Roboto, "Heiti SC", "Microsoft Yahei", sans-serif;
   font-style: normal;
   font-weight: normal;
   letter-spacing: normal;
@@ -5291,7 +5291,7 @@ button.close {
   display: none;
   max-width: 276px;
   padding: 1px;
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Helvetica Neue", Helvetica, Arial, "PingFang SC", "Hiragino Sans GB", "Source Han Sans CN", Roboto, "Heiti SC", "Microsoft Yahei", sans-serif;
   font-style: normal;
   font-weight: normal;
   letter-spacing: normal;

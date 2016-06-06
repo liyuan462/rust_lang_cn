@@ -73,11 +73,7 @@
                     <li class="media list-group-item">
                         <div class="media-body">
                             <h4 class="media-heading"><a href="/article/{{article.id}}">{{article.title}}</a> <small><small>{{create_time}}</small></small></h4>
-                            <h5 class="media-heading">
-                                <small>
-                                    {{{content}}}
-                                </small>
-                            </h5>
+                            {{{content}}}
                         </div>
                     </li>
                 {{/each}}
@@ -92,11 +88,7 @@
                         </div>
                         <div class="media-body">
                             <h4 class="media-heading"><small><small><a href="/user/{{user_id}}">{{username}}</a> 在</small></small> <a href="/article/{{article_id}}">{{article_title}}</a> <small><small>中回复了你</small></small> <small><small>{{create_time}}</small></small></h4>
-                            <h5 class="media-heading">
-                                <small>
-                                    {{{content}}}
-                                </small>
-                            </h5>
+                            {{{content}}}
                         </div>
                         {{#if is_new}}
                             <div class="media-right media-middle">

@@ -4,14 +4,188 @@ $font-family-sans-serif:"Helvetica Neue",Helvetica,Arial,"PingFang SC","Hiragino
 
 @import "bootstrap";
 
+$main-color: #FD7E73;
+$main-deep-color: #333;
+
 body {
     padding-bottom: 10px;
+    background: #f0f0f0;
 }
 
-.list-group-item.media {
-    margin-top: 0;
+// 重置 hover
+a:hover,a:active,a:visited{
+    text-decoration: none;
 }
 
+
+
+// 让 img 不超出边框
+p img{
+    max-width: 100%;
+    border-radius: 5px;
+}
+
+// logo 着色
+.navbar-brand b{
+    color: $main-color;
+    font-size: 1.3em;
+}
+
+// 消息提醒改为主色
+.new-massage{
+    a{
+        color: $main-color;
+    }
+    .red.badge{
+        background: $main-color;
+    }
+}
+
+
+
+// 增加 btn-red 的颜色
+.btn-red{
+    background: $main-color;
+    color: #fff;
+    border: 2px solid $main-color;
+}
+
+.btn-red:hover{
+    background: $main-color;
+    color: #fff;
+    border: 2px solid $main-color;
+}
+
+.btn-red:active, .btn-red.active, .open>.btn-red.dropdown-toggle{
+    background: $main-color;
+    color: #fff;
+    border: 2px solid $main-color;
+}
+
+// 面板的导航栏
+.panel{
+    // 去掉主页 panel-header 的 padding 和 border-bottom
+    .panel-heading-no-padding{
+        padding: 0;
+    }
+    .panel-heading{
+        border-bottom: 0;
+    }
+    .panel-heading a{
+        color:#333;
+    }
+
+    // 导航栏 active 样式
+    .nav-pills>li.active>a, .nav-pills>li.active>a:hover, .nav-pills>li.active>a:focus{
+        background: transparent;
+        border-bottom: 1px solid $main-color;
+        color: $main-deep-color;
+    }
+
+    // 导航栏 hover 
+    .nav>li>a:hover, .nav>li>a:focus{
+        background: transparent;
+        border-bottom: 1px solid $main-color;
+    }
+
+    // 去掉圆角
+    .nav-pills>li>a{
+        border-radius: 0;
+        color: $main-deep-color;
+    }
+
+
+    // 有人回复，设置颜色为主色调
+    .label-inverted.label-primary{
+        color: $main-color;
+        border: 1px solid $main-color;
+        background: transparent;
+        cursor: pointer;
+    }
+
+    // 无人回复样式减淡
+    .comment-none {
+        color: #dadada;
+        border: 1px solid #dadada;
+        background: transparent;
+        cursor: pointer;
+    }
+
+    // 每个列表样式
+    .list-group-item.media {
+        margin-top: 0;
+        padding: 5px 15px;
+        border: 1px solid #f0f0f0;
+        // 列表头像
+        .media-left{
+            padding-top: 3px;
+        }
+
+        // 列表的标题
+        .media-heading{
+            padding-top: 5px;
+            a{
+                font-size: 15px;
+                color: #333;
+            }
+            small span{
+                color: #bcbcbc;
+            }
+        }
+    }
+
+}
+
+// 重载分页 
 .pagination {
-    padding-left: 10px;
+    margin: 10px;
+        &>li>a:hover, 
+        &>li>a:focus, 
+        &>li>span:hover, 
+        &>li>span:focus{
+            z-index: 2;
+            color: #BDCFEF;
+            background-color: #fff;
+            border-color: #ddd;
+        }
+        &>.active>a,
+        &>.active>a:hover,
+        &>.active>a:focus,
+        &>.active>span,
+        &>.active>span:hover,
+        &>.active>span:focus{
+            z-index: 3;
+            color: #fff;
+            background-color: #BDCFEF;
+            border-color: #BDCFEF;
+            cursor: default;
+        }
+
+        &>li>a, 
+        &>li>span {
+            position: relative;
+            float: left;
+            padding: 6px 12px;
+            line-height: 1.42857;
+            text-decoration: none;
+            color: #777;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            margin-left: -1px;
+        }
 }
+
+
+// 友情链接
+.friendlist{
+    a {
+        display: block;
+        img{
+            max-width: 90%;
+        }
+    }
+}
+
+
+
+

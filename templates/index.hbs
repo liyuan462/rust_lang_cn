@@ -4,7 +4,7 @@
     <div class="row">
       <div class="col-md-9">
           <div class="panel panel-default">
-              <div class="panel-heading">
+              <div class="panel-heading panel-heading-no-padding">
                   <ul class="nav nav-pills">
                       <li role="presentation" class="{{#if index}}active{{/if}}"><a href="/">全部</a></li>
                       {{#each categories}}
@@ -28,15 +28,15 @@
                                       •
                                       <a href="/user/{{user.id}}">{{user.username}}</a>
                                       •
-                                      {{create_time}}
+                                      <span class="time-label">{{create_time}}</span>
                                   </small>
                               </h5>
                           </div>
                           <div class="media-right media-middle">
                               {{#if comments_count}}
-                                  <h4><span class="label label-primary">{{comments_count}}</span></h4>
+                                  <h4><span class="label label-inverted label-primary">{{comments_count}}</span></h4>
                               {{else}}
-                                  <h4><span class="label label-default">{{comments_count}}</span></h4>
+                                  <h4><span class="label comment-none">{{comments_count}}</span></h4>
                               {{/if}}
                           </div>
                       </li>
@@ -47,7 +47,7 @@
                   <ul class="pagination">
                       <li>
                           <a href="{{#if index}}/{{else}}/category/{{category}}{{/if}}?page={{previous_page}}" aria-label="Previous">
-                              <span aria-hidden="true">&laquo;</span>
+                              <span aria-hidden="true">上一页</span>
                           </a>
                       </li>
                       {{#each pages}}
@@ -55,7 +55,7 @@
                       {{/each}}
                       <li>
                           <a href="{{#if index}}/{{else}}/category/{{category}}{{/if}}?page={{next_page}}" aria-label="Next">
-                              <span aria-hidden="true">&raquo;</span>
+                              <span aria-hidden="true">下一页</span>
                           </a>
                       </li>
                   </ul>
@@ -68,8 +68,8 @@
           {{/if}}
           {{#if unread_messages_count}}
               <div class="panel panel-default">
-                  <div class="panel-body">
-                      <a href="/user/{{login_user.id}}/messages">未读消息 <span class="badge">{{unread_messages_count}}</span></a>
+                  <div class="panel-body new-massage">
+                      <a href="/user/{{login_user.id}}/messages">未读消息 <span class="red badge">{{unread_messages_count}}</span></a>
                   </div>
               </div>
           {{/if}}

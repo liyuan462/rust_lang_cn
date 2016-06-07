@@ -1,0 +1,23 @@
+{
+  "name": "rust_lang_cn",
+  "version": "0.0.1",
+  "description": "**China Community for Rust lang**",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rust-cn/rust_lang_cn.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rust-cn/rust_lang_cn/issues"
+  },
+  "homepage": "https://github.com/rust-cn/rust_lang_cn#readme",
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-sass": "^2.3.1"
+  }
+}

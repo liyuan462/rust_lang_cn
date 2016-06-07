@@ -13,7 +13,8 @@
                         •
                         <a href="/category/{{ article.category.value}}">{{article.category.title}}</a>
                         •
-                        {{ article.create_time}}
+                        
+                        <span class="time-label">{{ article.create_time}}</span>
                     </small>
                 </h5>
                 </div>
@@ -37,11 +38,12 @@
                           </a>
                       </div>
                       <div class="media-body">
-                          <h5 class="media-heading">
+                          <h5 class="media-heading" style="margin-bottom: 10px;">
                               <small>
                                   <a href="/user/{{user.id}}">{{user.username}}</a>
                                   •
-                                  {{create_time}}
+                                  
+                                  <span class="time-label">{{create_time}}</span>
                               </small>
                           </h5>
                           {{{ content }}}
@@ -78,8 +80,8 @@
 
           {{#if is_my_own}}
               <div class="panel panel-default">
-                  <div class="panel-body">
-                      <a class="btn btn-primary" href="/article/{{article.id}}/edit">编辑话题</a>
+                  <div class="panel-body text-center">
+                      <a class="btn btn-red btn-block" href="/article/{{article.id}}/edit">编辑话题</a>
                   </div>
               </div>
           {{/if}}

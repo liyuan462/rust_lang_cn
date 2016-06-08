@@ -74,7 +74,7 @@ p img{
     .panel-heading a{
         color:#333;
     }
-
+    
     // 导航栏 active 样式
     .nav-pills>li.active>a, .nav-pills>li.active>a:hover, .nav-pills>li.active>a:focus{
         background: transparent;
@@ -87,10 +87,16 @@ p img{
         background: transparent;
         border-bottom: 1px solid $main-color;
     }
-
+    
+    .nav-pills>li{
+        display: inline-block;
+        text-align: left;
+        float: none;
+    }
     // 去掉圆角
     .nav-pills>li>a{
         border-radius: 0;
+        border-bottom: 1px solid #f5f5f5;
         color: $main-deep-color;
     }
 

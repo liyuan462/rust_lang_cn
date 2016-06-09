@@ -23,6 +23,7 @@ extern crate regex;
 extern crate ammonia;
 #[macro_use]
 extern crate grabbag_macros;
+extern crate rss;
 
 mod base;
 mod handlers;

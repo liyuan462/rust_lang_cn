@@ -7,7 +7,7 @@
 1. clone本仓库到本地
 2. 初始化MySQL数据库，创建rust_lang_cn数据库，创建各数据表，建表语句见tables.sql
 3. 拷贝config-sample.toml至config.toml，修改其中的数据库配置
-4. 拷贝log4rs-sample.yaml至log4rs.toml，可以不用修改
+4. 拷贝log4rs-sample.yaml至log4rs.yaml，可以不用修改
 5. 配置并运行静态文件服务器，服务static文件下的静态文件内容，可用Nginx或者简单地用```python -m SimpleHTTPServer```亦或者```php -S 0.0.0.0:8000```，并设置好config.toml中的static_path，这个路径应该和你启动的静态资源服务器的资源所在路径相符合。
 6. 编译，执行命令```cargo build --release```即可
 7. 设置好config.toml中的app_path为：```"http:://localhost:3000"```，然后运行```./target/release/rust_lang_cn```
@@ -37,6 +37,7 @@ gulp
 * 编辑话题
 * 回帖
 * 个人中心
+* rss
 
 ### TODO
 

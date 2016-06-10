@@ -12,12 +12,6 @@ body {
     background: #f0f0f0;
 }
 
-
-// a:visited {
-//     color: red !important;
-// }
-
-
 // 让 img 不超出边框
 p img{
     max-width: 100%;
@@ -135,8 +129,8 @@ p img{
                 // 分类标签
                 &.label-cate{
                     font-size: .9em;
-                    color: #fff;
-                    background: lighten($main-color,10%);
+                    color: #333;
+                    // background: lighten($main-color,10%);
                     padding: .2em;
                 }
                 
@@ -147,16 +141,39 @@ p img{
             }
         }
 
-        h4.media-heading{
+        #post-list h4.media-heading{
             // 看过的变色
-            a:first-child:visited{
-                color: #337ab7;
-                border-bottom: 1px solid #337ab7;
+            & > a:visited{
+                color: #47B682;
             }
         }
     }
 
 }
+
+
+// label
+.label-top{
+    color: #fff;
+    border-radius: 5px;
+    background: $main-color;
+    font-size: 8px;
+    position: relative;
+    top: -2px;
+    margin-right: 1px;
+}
+
+.label-essence{
+    color: #fff;
+    border-radius: 5px;
+    background: #55BDF3;
+    font-size: 8px;
+    position: relative;
+    top: -2px;
+    margin-right: 1px;
+}
+
+
 
 // 重载分页 
 .pagination {

@@ -194,9 +194,9 @@ pub fn rss(req: &mut Request) -> IronResult<Response> {
             create_time - offset.local_minus_utc(), offset);
 
         Item {
-            title: Some(title),
+            title: Some(util::safe_xml(&title)),
             pub_date: Some(create_time_with_tz.to_rfc2822()),
-            description: Some(render_html(&content)),
+            description: Some(util::safe_xml(&render_html(&content))),
             author: Some(username),
             link: Some(article_path.clone()),
             guid: Some(Guid{is_perma_link: true, value: article_path}),

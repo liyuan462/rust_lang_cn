@@ -12,11 +12,10 @@ body {
     background: #f0f0f0;
 }
 
-// 重置 hover
-a:hover,a:active,a:visited{
-    text-decoration: none;
-}
 
+// a:visited {
+//     color: red !important;
+// }
 
 
 // 让 img 不超出边框
@@ -133,9 +132,26 @@ p img{
             a{
                 font-size: 15px;
                 color: #333;
+                // 分类标签
+                &.label-cate{
+                    font-size: .9em;
+                    color: #fff;
+                    background: lighten($main-color,10%);
+                    padding: .2em;
+                }
+                
+
             }
             small span{
                 color: #bcbcbc;
+            }
+        }
+
+        h4.media-heading{
+            // 看过的变色
+            a:first-child:visited{
+                color: #337ab7;
+                border-bottom: 1px solid #337ab7;
             }
         }
     }

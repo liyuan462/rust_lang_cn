@@ -14,7 +14,7 @@
                         <a href="/category/{{ article.category.value}}">{{article.category.title}}</a>
                         •
                         
-                        <span class="time-label">{{ article.create_time}}</span>
+                        <span class="time-label" date-time="{{article.create_time}}"></span>
                     </small>
                 </h5>
                 </div>
@@ -43,7 +43,8 @@
                                   <a href="/user/{{user.id}}">{{user.username}}</a>
                                   •
                                   
-                                  <span class="time-label">{{create_time}}</span>
+                                  <span class="time-label" date-time="{{create_time}}"></span>
+
                               </small>
                           </h5>
                           {{{ content }}}

@@ -54,7 +54,7 @@
                                 <small>
                                     <a href="/category/{{category.value}}">{{category.title}}</a>
                                     •
-                                    <span class="time-label">{{create_time}}</span>
+                                    <span class="time-label" date-time="{{create_time}}"></span>
                                 </small>
                             </h5>
                         </div>
@@ -72,7 +72,7 @@
                 {{#each comments}}
                     <li class="media list-group-item">
                         <div class="media-body">
-                            <h4 class="media-heading" style="margin-bottom: 10px;"><a href="/article/{{article.id}}">{{article.title}}</a> <small><small><span class="time-label">{{create_time}}</span></small></small></h4>
+                            <h4 class="media-heading" style="margin-bottom: 10px;"><a href="/article/{{article.id}}">{{article.title}}</a> <small><small><span class="time-label" date-time="{{create_time}}"></span></small></small></h4>
                             {{{content}}}
                         </div>
                     </li>
@@ -87,7 +87,7 @@
                             </a>
                         </div>
                         <div class="media-body">
-                            <h4 class="media-heading" style="margin-bottom: 10px;"><small><small><a href="/user/{{user_id}}">{{username}}</a> 在</small></small> <a href="/article/{{article_id}}">{{article_title}}</a> <small><small>中回复了你</small></small> <small><small><span class="time-label">{{create_time}}</span></small></small></h4>
+                            <h4 class="media-heading" style="margin-bottom: 10px;"><small><small><a href="/user/{{user_id}}">{{username}}</a> 在</small></small> <a href="/article/{{article_id}}">{{article_title}}</a> <small><small>中回复了你</small></small> <small><small><span class="time-label" date-time="{{create_time}}"></span></small></small></h4>
                             {{{content}}}
                         </div>
                         {{#if is_new}}

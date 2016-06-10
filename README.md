@@ -37,8 +37,8 @@ gulp
 * 编辑话题
 * 回帖
 * 个人中心
-* rss
+* RSS
 
-### TODO
+### 常见问题
 
-* 邮箱验证
+* mac上编译找不到openssl，参见这个[issue](https://github.com/rust-cn/rust_lang_cn/issues/7)

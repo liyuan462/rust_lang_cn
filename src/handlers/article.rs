@@ -62,7 +62,7 @@ pub fn show(req: &mut Request) -> IronResult<Response> {
     let mut result = pool.prep_exec("SELECT a.id, a.category, a.title, a.content, a.comments_count, a.create_time, \
                                      u.id as user_id, u.username, u.email from article \
                                      as a join user as u on a.user_id=u.id where a.id=? and a.status=?",
-                                    (&article_id, constant::ARTICLE_STATUS::NORMAL)).unwrap();
+                                    (&article_id, constant::ARTICLE::STATUS::NORMAL)).unwrap();
 
     let raw_row = result.next();
     if raw_row.is_none() {
@@ -141,7 +141,7 @@ pub fn edit_load(req: &mut Request) -> IronResult<Response> {
     let mut result = pool.prep_exec("SELECT a.id, a.category, a.title, a.content, a.comments_count, a.create_time, \
                                      u.id as user_id, u.username, u.email from article \
                                      as a join user as u on a.user_id=u.id where a.id=? and a.status=?",
-                                    (&article_id, constant::ARTICLE_STATUS::NORMAL)).unwrap();
+                                    (&article_id, constant::ARTICLE::STATUS::NORMAL)).unwrap();
 
     let raw_row = result.next();
     if raw_row.is_none() {
@@ -209,7 +209,7 @@ pub fn edit(req: &mut Request) -> IronResult<Response> {
     {
         let mut result = trans.prep_exec("SELECT u.id as user_id from article \
                                           as a join user as u on a.user_id=u.id where a.id=? and a.status=? for update",
-                                         (article_id, constant::ARTICLE_STATUS::NORMAL)).unwrap();
+                                         (article_id, constant::ARTICLE::STATUS::NORMAL)).unwrap();
 
         let raw_row = result.next();
         if raw_row.is_none() {

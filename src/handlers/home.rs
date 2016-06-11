@@ -35,7 +35,7 @@ pub fn index(req: &mut Request) -> IronResult<Response> {
 
     let pool = req.get::<Read<MyPool>>().unwrap().value();
     let row = pool.prep_exec("SELECT count(id) from article where status=? ",
-                             (constant::ARTICLE_STATUS::NORMAL,))
+                             (constant::ARTICLE::STATUS::NORMAL,))
         .unwrap().next().unwrap().unwrap();
 
     let count: usize = my::from_row(row);
@@ -46,7 +46,7 @@ pub fn index(req: &mut Request) -> IronResult<Response> {
          a.create_time, u.id as user_id, u.username, u.email from article \
          as a join user as u on a.user_id=u.id where a.status=? \
          order by a.priority desc, a.create_time desc limit ?,?",
-        (constant::ARTICLE_STATUS::NORMAL,
+        (constant::ARTICLE::STATUS::NORMAL,
          (page - 1) * constant::PAGE_SIZE,
          constant::PAGE_SIZE)).unwrap();
 
@@ -78,8 +78,10 @@ pub fn category(req: &mut Request) -> IronResult<Response> {
 
     let row = pool.prep_exec("SELECT count(id) from article where status=? \
                               and category=?",
-                             (constant::ARTICLE_STATUS::NORMAL, category_id))
-        .unwrap().next().unwrap().unwrap();
+                             (constant::ARTICLE::STATUS::NORMAL,
+                              category_id)).unwrap()
+        .next().unwrap().unwrap();
+
     let count: usize = my::from_row(row);
     let page_count = (count + constant::PAGE_SIZE - 1) / constant::PAGE_SIZE;
 
@@ -88,7 +90,7 @@ pub fn category(req: &mut Request) -> IronResult<Response> {
          a.create_time, u.id as user_id, u.username, u.email from article \
          as a join user as u on a.user_id=u.id where a.status=? and a.category=? \
          order by a.priority desc, a.create_time desc limit ?,?",
-        (constant::ARTICLE_STATUS::NORMAL,
+        (constant::ARTICLE::STATUS::NORMAL,
          category_id,
          (page - 1) * constant::PAGE_SIZE,
          constant::PAGE_SIZE)).unwrap();

@@ -67,7 +67,7 @@ p img{
     .panel-heading a{
         color:#333;
     }
-    
+
     // 导航栏 active 样式
     .nav-pills>li.active>a, .nav-pills>li.active>a:hover, .nav-pills>li.active>a:focus{
         background: transparent;
@@ -75,12 +75,12 @@ p img{
         color: $main-deep-color;
     }
 
-    // 导航栏 hover 
+    // 导航栏 hover
     .nav>li>a:hover, .nav>li>a:focus{
         background: transparent;
         border-bottom: 1px solid $main-color;
     }
-    
+
     .nav-pills>li{
         display: inline-block;
         text-align: left;
@@ -133,7 +133,7 @@ p img{
                     // background: lighten($main-color,10%);
                     padding: .2em;
                 }
-                
+
 
             }
             small span{
@@ -175,12 +175,12 @@ p img{
 
 
 
-// 重载分页 
+// 重载分页
 .pagination {
     margin: 10px;
-        &>li>a:hover, 
-        &>li>a:focus, 
-        &>li>span:hover, 
+        &>li>a:hover,
+        &>li>a:focus,
+        &>li>span:hover,
         &>li>span:focus{
             z-index: 2;
             color: #BDCFEF;
@@ -200,7 +200,7 @@ p img{
             cursor: default;
         }
 
-        &>li>a, 
+        &>li>a,
         &>li>span {
             position: relative;
             float: left;
@@ -224,7 +224,3 @@ p img{
         }
     }
 }
-
-
-
-

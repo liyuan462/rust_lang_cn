@@ -1,14 +1,22 @@
 use chrono::*;
 
 lazy_static! {
-    pub static ref DEFAULT_DATETIME: NaiveDateTime = UTC.ymd(1970,1,1).and_hms(0, 0, 0).naive_local();
+    pub static ref DEFAULT_DATETIME: NaiveDateTime = UTC.ymd(
+        1970,1,1).and_hms(0, 0, 0).naive_local();
 }
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
-pub mod ARTICLE_STATUS {
-    pub const NORMAL: i8 = 0;
-    pub const DELETED: i8 = -1;
+pub mod ARTICLE {
+    pub mod STATUS {
+        pub const NORMAL: i8 = 0;
+        pub const DELETED: i8 = -1;
+    }
+
+    pub mod FLAG {
+        pub const TOP: u8 = 1 << 0;
+        pub const ESSENCE: u8 = 1 << 1;
+    }
 }
 
 #[allow(non_snake_case)]
@@ -25,7 +33,8 @@ pub mod CATEGORY {
     pub const SITE: i8 = 6;
 
     lazy_static! {
-        pub static ref ALL: Vec<i8> = collect![ORIGINAL, FORWARD, TRANSLATION, QUESTION, RECRUIT, NONSENSE, SITE];
+        pub static ref ALL: Vec<i8> = collect![
+            ORIGINAL, FORWARD, TRANSLATION, QUESTION, RECRUIT, NONSENSE, SITE];
 
         pub static ref TITLES: HashMap<i8, &'static str> = collect![
             NONSENSE => "扯淡",

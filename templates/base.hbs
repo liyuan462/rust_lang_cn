@@ -93,13 +93,19 @@
              }
          });
      });
+
      (function(){
-      var timesNode = $('.time-label');
+      var timesNode = $('.time-label')
       for (var i = timesNode.length - 1; i >= 0; i--) {
-        timesNode[i].innerHTML = moment(timesNode[i].innerHTML).fromNow();
+        timesNode[i].innerHTML = moment(timesNode[i].getAttribute('date-time')).fromNow()
       }
 
+      // fancybox
+      $(".media-body img,.panel-body img").wrap(function(){
+        return "<a class='fancybox' style='display:block' href="+this.getAttribute('src')+"></a>"
+      })
 
+      // $(".fancybox").fancybox()
 
      })()
     </script>

@@ -10,13 +10,13 @@ pub struct User {
     pub create_time: NaiveDateTime,
 }
 
-impl User {
-    pub fn default() -> User {
+impl Default for User {
+    fn default() -> User {
         User{
-            id: 0,
-            username: String::new(),
-            email: String::new(),
-            avatar: String::new(),
+            id: Default::default(),
+            username: Default::default(),
+            email: Default::default(),
+            avatar: Default::default(),
             create_time: *constant::DEFAULT_DATETIME
         }
     }
@@ -42,20 +42,24 @@ pub struct Article {
     pub user: User,
     pub comments_count: usize,
     pub create_time: NaiveDateTime,
+    pub update_time: NaiveDateTime,
     pub comments: Vec<Comment>,
+    pub flag: u8,
 }
 
-impl Article {
-    pub fn default() -> Article {
+impl Default for Article {
+    fn default() -> Article {
         Article {
-            id: 0,
-            category: Category::default(),
-            title: "".to_owned(),
-            content: "".to_owned(),
-            user: User::default(),
-            comments_count: 0,
+            id: Default::default(),
+            category: Default::default(),
+            title: Default::default(),
+            content: Default::default(),
+            user: Default::default(),
+            comments_count: Default::default(),
             create_time: *constant::DEFAULT_DATETIME,
-            comments: Vec::new(),
+            update_time: *constant::DEFAULT_DATETIME,
+            comments: Default::default(),
+            flag: Default::default(),
         }
     }
 }
@@ -69,7 +73,14 @@ impl ToJson for Article {
         object.insert("content".to_owned(), self.content.to_json());
         object.insert("user".to_owned(), self.user.to_json());
         object.insert("comments_count".to_owned(), self.comments_count.to_json());
-        object.insert("create_time".to_owned(), self.create_time.format("%Y-%m-%d %H:%M:%S").to_string().to_json());
+        object.insert("create_time".to_owned(), self.create_time.format(
+            "%Y-%m-%d %H:%M:%S").to_string().to_json());
+        object.insert("update_time".to_owned(), self.update_time.format(
+            "%Y-%m-%d %H:%M:%S").to_string().to_json());
+        object.insert("is_top".to_owned(),
+                      (self.flag & constant::ARTICLE::FLAG::TOP > 0).to_json());
+        object.insert("is_essence".to_owned(),
+                      (self.flag & constant::ARTICLE::FLAG::ESSENCE > 0).to_json());
         object.insert("comments".to_owned(), self.comments.to_json());
         object.to_json()
     }
@@ -100,8 +111,8 @@ pub struct Category {
     pub title: String,
 }
 
-impl Category {
-    pub fn default() -> Category {
+impl Default for Category {
+    fn default() -> Category {
         Category::from_value(0)
     }
 }

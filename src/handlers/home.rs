@@ -35,7 +35,7 @@ pub fn index(req: &mut Request) -> IronResult<Response> {
 
     let pool = req.get::<Read<MyPool>>().unwrap().value();
     let row = pool.prep_exec("SELECT count(id) from article where status=? ",
-                             (constant::ARTICLE_STATUS::NORMAL,))
+                             (constant::ARTICLE::STATUS::NORMAL,))
         .unwrap().next().unwrap().unwrap();
 
     let count: usize = my::from_row(row);
@@ -43,10 +43,11 @@ pub fn index(req: &mut Request) -> IronResult<Response> {
 
     let result = pool.prep_exec(
         "SELECT a.id, a.category, a.title, a.content, a.comments_count, \
-         a.create_time, u.id as user_id, u.username, u.email from article \
+         a.create_time, a.update_time, a.flag, u.id as user_id, u.username, \
+         u.email from article \
          as a join user as u on a.user_id=u.id where a.status=? \
-         order by a.priority desc, a.create_time desc limit ?,?",
-        (constant::ARTICLE_STATUS::NORMAL,
+         order by a.flag & 1 desc, a.priority desc, a.update_time desc limit ?,?",
+        (constant::ARTICLE::STATUS::NORMAL,
          (page - 1) * constant::PAGE_SIZE,
          constant::PAGE_SIZE)).unwrap();
 
@@ -78,17 +79,20 @@ pub fn category(req: &mut Request) -> IronResult<Response> {
 
     let row = pool.prep_exec("SELECT count(id) from article where status=? \
                               and category=?",
-                             (constant::ARTICLE_STATUS::NORMAL, category_id))
-        .unwrap().next().unwrap().unwrap();
+                             (constant::ARTICLE::STATUS::NORMAL,
+                              category_id)).unwrap()
+        .next().unwrap().unwrap();
+
     let count: usize = my::from_row(row);
     let page_count = (count + constant::PAGE_SIZE - 1) / constant::PAGE_SIZE;
 
     let result = pool.prep_exec(
         "SELECT a.id, a.category, a.title, a.content, a.comments_count, \
-         a.create_time, u.id as user_id, u.username, u.email from article \
+         a.create_time, a.update_time, a.flag, u.id as user_id, u.username, \
+         u.email from article \
          as a join user as u on a.user_id=u.id where a.status=? and a.category=? \
-         order by a.priority desc, a.create_time desc limit ?,?",
-        (constant::ARTICLE_STATUS::NORMAL,
+         order by a.flag & 1 desc, a.priority desc, a.create_time desc limit ?,?",
+        (constant::ARTICLE::STATUS::NORMAL,
          category_id,
          (page - 1) * constant::PAGE_SIZE,
          constant::PAGE_SIZE)).unwrap();
@@ -103,8 +107,9 @@ fn index_data(
 
     let articles: Vec<Article> = result.map(|x| x.unwrap()).map(|row| {
         let (id, category, title, content, comments_count,
-             create_time, user_id, username, email) = my::from_row::<
-                (_,_,_,_,_,_,_,_,String)>(row);
+             create_time, update_time, flag,
+             user_id, username, email) = my::from_row::<
+                (_,_,_,_,_,_,_,_,_,_,String)>(row);
 
         Article {
             id: id,
@@ -120,6 +125,8 @@ fn index_data(
                 create_time: *constant::DEFAULT_DATETIME,
             },
             create_time: create_time,
+            update_time: update_time,
+            flag: flag,
             comments: Vec::new(),
         }
     }).collect();
@@ -180,7 +187,7 @@ pub fn rss(req: &mut Request) -> IronResult<Response> {
          a.create_time, u.username from article \
          as a join user as u on a.user_id=u.id where a.status=? \
          order by a.create_time desc limit ?,?",
-        (constant::ARTICLE_STATUS::NORMAL,
+        (constant::ARTICLE::STATUS::NORMAL,
          0,
          constant::PAGE_SIZE)).unwrap();
 

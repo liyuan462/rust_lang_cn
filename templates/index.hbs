@@ -20,15 +20,23 @@
                                   <img class="media-object img-circle" src="{{ user.avatar }}" style="width:48px;height:48px;">
                               </a>
                           </div>
-                          <div class="media-body">
-                              <h4 class="media-heading"><a href="/article/{{id}}">{{title}}</a></h4>
+                          <div class="media-body" id="post-list">
+                              <h4 class="media-heading">
+                                  {{#if is_top}}
+                                      <span class="label label-top">置顶</span>
+                                  {{/if}}
+                                  {{#if is_essence}}
+                                      <span class="label label-essence">精华</span>
+                                  {{/if}}
+                                  <a href="/article/{{id}}">{{title}}</a>
+                              </h4>
                               <h5 class="media-heading">
                                   <small>
                                       <a href="/category/{{category.value}}">{{category.title}}</a>
                                       •
                                       <a href="/user/{{user.id}}">{{user.username}}</a>
                                       •
-                                      <span class="time-label">{{create_time}}</span>
+                                      <span class="time-label" date-time="{{update_time}}"></span>
                                   </small>
                               </h5>
                           </div>

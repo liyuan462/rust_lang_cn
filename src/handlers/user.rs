@@ -153,7 +153,7 @@ pub fn show(req: &mut Request) -> IronResult<Response> {
         "SELECT id, category, title, content, comments_count, \
          create_time from article where status=? and user_id=? order by \
          create_time desc",
-        (constant::ARTICLE_STATUS::NORMAL, user_id))
+        (constant::ARTICLE::STATUS::NORMAL, user_id))
         .unwrap()
         .map(|x| x.unwrap())
         .map(|row| {
@@ -168,6 +168,8 @@ pub fn show(req: &mut Request) -> IronResult<Response> {
                 comments_count: comments_count,
                 user: User::default(),
                 create_time: create_time,
+                update_time: *constant::DEFAULT_DATETIME,
+                flag: 0,
                 comments: Vec::new(),
             }
         }).collect();
@@ -311,7 +313,7 @@ fn get_general_info(data: &mut ResponseData,
     // get articles count
     let articles_count = my::from_row::<usize>(
         pool.prep_exec("SELECT count(id) from article where status=? and user_id=?",
-                       (constant::ARTICLE_STATUS::NORMAL, user_id))
+                       (constant::ARTICLE::STATUS::NORMAL, user_id))
             .unwrap().next().unwrap().unwrap());
 
     // get comments count

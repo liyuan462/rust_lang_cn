@@ -22,16 +22,21 @@
                           </div>
                           <div class="media-body" id="post-list">
                               <h4 class="media-heading">
-                                  <span class="label label-top">置顶</span>
-                                  <span class="label label-essence">精华</span>
-                              <a href="/article/{{id}}">{{title}}</a></h4>
+                                  {{#if is_top}}
+                                      <span class="label label-top">置顶</span>
+                                  {{/if}}
+                                  {{#if is_essence}}
+                                      <span class="label label-essence">精华</span>
+                                  {{/if}}
+                                  <a href="/article/{{id}}">{{title}}</a>
+                              </h4>
                               <h5 class="media-heading">
                                   <small>
                                       <a href="/category/{{category.value}}">{{category.title}}</a>
                                       •
                                       <a href="/user/{{user.id}}">{{user.username}}</a>
                                       •
-                                      <span class="time-label" date-time="{{create_time}}"></span>
+                                      <span class="time-label" date-time="{{update_time}}"></span>
                                   </small>
                               </h5>
                           </div>

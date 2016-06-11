@@ -168,6 +168,8 @@ pub fn show(req: &mut Request) -> IronResult<Response> {
                 comments_count: comments_count,
                 user: User::default(),
                 create_time: create_time,
+                update_time: *constant::DEFAULT_DATETIME,
+                flag: 0,
                 comments: Vec::new(),
             }
         }).collect();

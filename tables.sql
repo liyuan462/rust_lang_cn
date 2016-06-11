@@ -20,6 +20,8 @@ CREATE TABLE `article` (
   `create_time` datetime NOT NULL,
   `status` tinyint(4) NOT NULL DEFAULT '0',
   `priority` tinyint(4) NOT NULL DEFAULT '0',
+  `flag` int(11) NOT NULL DEFAULT '0',
+  `update_time` datetime NOT NULL,
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`),
   FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)

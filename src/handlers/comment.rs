@@ -71,7 +71,7 @@ pub fn new(req: &mut Request) -> IronResult<Response> {
 
     trans.prep_exec("UPDATE article set comments_count=comments_count+1, \
                      update_time=? where id=?",
-                    (article_id, now)).unwrap();
+                    (now, article_id)).unwrap();
 
     // send message to article's author
     if article_user_id != user.id {

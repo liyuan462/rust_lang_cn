@@ -49,7 +49,7 @@ pub fn new(req: &mut Request) -> IronResult<Response> {
     let now = Local::now().naive_local();
     let mut stmt = pool.prepare("INSERT INTO article(category, title, content, \
                                  user_id, create_time, update_time) \
-                                 VALUES (?, ?, ?, ?, ?)").unwrap();
+                                 VALUES (?, ?, ?, ?, ?, ?)").unwrap();
     let result = stmt.execute((category, title, content, user.id, now, now));
     result.unwrap();
     json_ok_response()

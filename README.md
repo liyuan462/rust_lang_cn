@@ -40,6 +40,13 @@ gulp
 * RSS
 * 置顶，加精
 
+### 如何参与
+
+* 如果你有问题，请提[issue](https://github.com/rust-cn/rust_lang_cn/issues)或者在[Rust China](http://rust-lang-cn.org)的[站务](http://rust-lang-cn.org/category/6)版块发帖。
+* 如果你想贡献代码，请提[pull request](https://github.com/rust-cn/rust_lang_cn/pulls)
+* 如果你想成为核心开发团队的一员，请[联系我们](mailto:admin@rust-lang-cn.org)
+* 还有，别忘了加入我们的[交流频道](https://rust-cn.pubu.im/reg/prmkl2w7n2n9fky)
+
 ### 常见问题
 
 * mac上编译找不到openssl，参见这个[issue](https://github.com/rust-cn/rust_lang_cn/issues/7)

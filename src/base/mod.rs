@@ -1,3 +1,5 @@
+#[macro_use]
+pub mod macros;
 pub mod framework;
 pub mod config;
 pub mod validator;

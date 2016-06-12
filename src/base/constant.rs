@@ -33,10 +33,10 @@ pub mod CATEGORY {
     pub const SITE: i8 = 6;
 
     lazy_static! {
-        pub static ref ALL: Vec<i8> = collect![
+        pub static ref ALL: Vec<i8> = vec![
             ORIGINAL, FORWARD, TRANSLATION, QUESTION, RECRUIT, NONSENSE, SITE];
 
-        pub static ref TITLES: HashMap<i8, &'static str> = collect![
+        pub static ref TITLES: HashMap<i8, &'static str> = m_hashmap![
             NONSENSE => "扯淡",
             ORIGINAL => "原创",
             FORWARD => "转载",

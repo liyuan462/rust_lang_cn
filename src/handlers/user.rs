@@ -2,7 +2,8 @@ use iron::prelude::*;
 use base::framework::{ResponseData, temp_response,
                       json_error_response, json_ok_response, not_found_response};
 use urlencoded::UrlEncodedBody;
-use base::validator::{Validator, Checker, Str, StrValue, Max, Min, Format};
+use base::validator::{Validator, Checker, Str, StrValue,
+                      Max, Min, Format, Optional, Int, IntValue};
 use mysql as my;
 use crypto::md5;
 use crypto::digest::Digest;
@@ -19,6 +20,9 @@ use rustc_serialize::json::{Object, Json, ToJson};
 use base::util::gen_gravatar_url;
 use base::util::render_html;
 use base::constant;
+use oven::prelude::*;
+use cookie::Cookie;
+use time;
 
 pub fn register_load(req: &mut Request) -> IronResult<Response> {
     let data = ResponseData::new(req);
@@ -88,7 +92,8 @@ pub fn login(req: &mut Request) -> IronResult<Response> {
     let mut validator = Validator::new();
     validator
         .add_checker(Checker::new("username", Str, "用户名"))
-        .add_checker(Checker::new("password", Str, "密码"));
+        .add_checker(Checker::new("password", Str, "密码"))
+        .add_checker(Checker::new("persist", Int, "记住登录状态") << Optional);
 
     validator.validate(req.get::<UrlEncodedBody>());
     if !validator.is_valid() {
@@ -119,9 +124,19 @@ pub fn login(req: &mut Request) -> IronResult<Response> {
     }
 
     // set session
-    let login = LoginUser::get_login(req);
     let mut resp = json_ok_response().unwrap();
-    resp.set_mut(login.log_in(LoginUser::new(user_id, &username, &email)));
+    let mut c = Cookie::new("logged_in_user".to_owned(), "".to_owned());
+    c.httponly = true;
+    if match validator.valid_data.get("persist") {
+        Some(p) => if p[0].downcast_ref_unchecked::<IntValue>().value() == 1 {
+            true} else {false},
+        _ => false
+    } {
+        c.expires = Some(time::now() + time::Duration::days(365));
+    }
+    c.path = Some("/".to_owned());
+    c.value = LoginUser::new(user_id, &username, &email).get_user_id();
+    resp.set_cookie(c);
     Ok(resp)
 }
 

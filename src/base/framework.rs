@@ -143,7 +143,10 @@ impl ToJson for LoginUser {
 
 impl User for LoginUser {
     fn from_user_id(req: &mut Request, user_id: &str) -> Option<LoginUser> {
-        let user_id = user_id.parse::<u64>().unwrap();
+        let user_id = match user_id.parse::<u64>() {
+            Ok(u) => u,
+            _ => return None,
+        };
         let pool = req.get::<Read<MyPool>>().unwrap().value();
         let mut result = pool.prep_exec("SELECT id, username, email from user where id=?", (&user_id,)).unwrap();
         let row = result.next().unwrap().unwrap();

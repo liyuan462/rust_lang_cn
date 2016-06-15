@@ -25,6 +25,7 @@ extern crate ammonia;
 extern crate rss;
 extern crate cookie;
 extern crate oven;
+extern crate url;
 
 mod base;
 mod handlers;

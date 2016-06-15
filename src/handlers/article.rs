@@ -4,7 +4,8 @@ use base::framework::{ResponseData, temp_response,
                       not_found_response};
 use urlencoded::UrlEncodedBody;
 use base::db::MyPool;
-use base::validator::{Validator, Checker, Str, StrValue, Int, IntValue, Max, Min, Lambda};
+use base::validator::{Validator, Checker, Str, StrValue, Int,
+                      IntValue, Max, Min, Lambda};
 use base::framework::LoginUser;
 use base::util::render_html;
 use iron_login::User as U;

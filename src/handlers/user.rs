@@ -2,8 +2,8 @@ use iron::prelude::*;
 use base::framework::{ResponseData, temp_response,
                       json_error_response, json_ok_response, not_found_response};
 use urlencoded::UrlEncodedBody;
-use base::validator::{Validator, Checker, Str, StrValue,
-                      Max, Min, Format, Optional, Int, IntValue};
+use urlencoded::UrlEncodedQuery;
+use base::validator::{Validator, Checker, Str, StrValue, Max, Min, Format};
 use mysql as my;
 use crypto::md5;
 use crypto::digest::Digest;
@@ -23,9 +23,19 @@ use base::constant;
 use oven::prelude::*;
 use cookie::Cookie;
 use time;
+use std::io::Read as io_read;
+use url::{form_urlencoded, Url};
+use iron::Url as iron_url;
+use base::config::Config;
+use iron::status;
+use iron::modifiers::Redirect;
 
 pub fn register_load(req: &mut Request) -> IronResult<Response> {
-    let data = ResponseData::new(req);
+    let mut data = ResponseData::new(req);
+    let conf_t = req.get::<Read<Config>>().unwrap().value();
+    let github_config = conf_t.get("github").unwrap().as_table().unwrap();
+    let client_id = github_config.get("client_id").unwrap().as_str().unwrap();
+    data.insert("github_client_id", client_id.to_json());
     temp_response("user/register_load", &data)
 }
 
@@ -83,17 +93,74 @@ pub fn register(req: &mut Request) -> IronResult<Response> {
     json_ok_response()
 }
 
-pub fn login_load(req: &mut Request) -> IronResult<Response> {
-    let data = ResponseData::new(req);
-    temp_response("user/login_load", &data)
+pub fn github_register(req: &mut Request) -> IronResult<Response> {
+    let mut github_user_id_str: String = req.get_cookie("logged_in_user")
+        .unwrap().value.clone();
+    github_user_id_str = github_user_id_str.trim_left_matches("github:").to_string();
+    let github_user_id = github_user_id_str.parse::<u64>().unwrap();
+
+    let mut validator = Validator::new();
+
+    validator
+        .add_checker(
+            Checker::new("username", Str, "用户名")
+                << Min(3)
+                << Max(32)
+                << Format(r"^[a-zA-Z_][\da-zA-Z_]{2,}$"))
+        .add_checker(
+            Checker::new("email", Str, "邮箱")
+                << Min(5)
+                << Max(64)
+                << Format(r"^[^@]+@[^@]+\.[^@]+$"));
+
+    validator.validate(req.get::<UrlEncodedBody>());
+    if !validator.is_valid() {
+        return json_error_response(&validator.messages[0]);
+    }
+
+    let username = validator.get_valid::<StrValue>("username").value();
+    let email = validator.get_valid::<StrValue>("email").value();
+    let now = Local::now().naive_local();
+    let pool = req.get::<Read<MyPool>>().unwrap().value();
+    let mut trans = pool.start_transaction(false, None, None).unwrap();
+
+    let user_id: u64;
+
+    {
+        let result = trans.prep_exec(
+            "INSERT INTO user(username, email, \
+             password, salt, create_time) VALUES (?, ?, ?, ?, ?)",
+            (username, email, "", "", now));
+
+        if let Err(my::error::Error::MySqlError(ref e)) = result {
+            if e.code == 1062 {
+                return json_error_response("对不起，该用户已经被注册了");
+            }
+        }
+
+        user_id = result.unwrap().last_insert_id();
+    }
+
+    trans.prep_exec("UPDATE github_user set user_id=?, bind_time=? where id=?",
+                    (user_id, now, github_user_id)).unwrap();
+
+    trans.commit().unwrap();
+
+    let mut resp = json_ok_response().unwrap();
+    set_login(&mut resp, &(user_id.to_string()), true);
+    Ok(resp)
 }
 
-pub fn login(req: &mut Request) -> IronResult<Response> {
+pub fn github_login(req: &mut Request) -> IronResult<Response> {
+    let mut github_user_id_str: String = req.get_cookie("logged_in_user")
+        .unwrap().value.clone();
+    github_user_id_str = github_user_id_str.trim_left_matches("github:").to_string();
+    let github_user_id = github_user_id_str.parse::<u64>().unwrap();
+
     let mut validator = Validator::new();
     validator
         .add_checker(Checker::new("username", Str, "用户名"))
-        .add_checker(Checker::new("password", Str, "密码"))
-        .add_checker(Checker::new("persist", Int, "记住登录状态") << Optional);
+        .add_checker(Checker::new("password", Str, "密码"));
 
     validator.validate(req.get::<UrlEncodedBody>());
     if !validator.is_valid() {
@@ -102,41 +169,160 @@ pub fn login(req: &mut Request) -> IronResult<Response> {
 
     let username = validator.get_valid::<StrValue>("username").value();
     let password = validator.get_valid::<StrValue>("password").value();
-
     let pool = req.get::<Read<MyPool>>().unwrap().value();
 
-    let mut result = pool.prep_exec(
-        "SELECT id, email, password, salt from user where username=?",
-        (&username,)).unwrap();
-    let raw_row = result.next();
-    if raw_row.is_none() {
+    let raw_user_id = check_login(&pool, &username, &password);
+    if raw_user_id.is_none() {
         return json_error_response("对不起，用户名或密码不对");
     }
-    let row = raw_row.unwrap().unwrap();
-    let (user_id, email, pass, salt) = my::from_row::<(
-        u64, String, String, String)>(row);
-    let password_with_salt = password + &salt;
-    let mut sh = md5::Md5::new();
-    sh.input_str(&password_with_salt);
-    let hash = sh.result_str();
-    if pass != hash {
-        return json_error_response("对不起，用户名或密码不对");
-    }
+    let user_id = raw_user_id.unwrap();
+
+    let now = Local::now().naive_local();
+    pool.prep_exec("UPDATE github_user set user_id=?, bind_time=? where id=?",
+                    (user_id, now, github_user_id)).unwrap();
 
     // set session
     let mut resp = json_ok_response().unwrap();
-    let mut c = Cookie::new("logged_in_user".to_owned(), "".to_owned());
-    c.httponly = true;
-    if match validator.valid_data.get("persist") {
-        Some(p) => if p[0].downcast_ref_unchecked::<IntValue>().value() == 1 {
-            true} else {false},
-        _ => false
-    } {
-        c.expires = Some(time::now() + time::Duration::days(365));
+    set_login(&mut resp, &(user_id.to_string()), true);
+
+    Ok(resp)
+}
+
+pub fn login_load(req: &mut Request) -> IronResult<Response> {
+    let mut data = ResponseData::new(req);
+    let conf_t = req.get::<Read<Config>>().unwrap().value();
+    let github_config = conf_t.get("github").unwrap().as_table().unwrap();
+    let client_id = github_config.get("client_id").unwrap().as_str().unwrap();
+    data.insert("github_client_id", client_id.to_json());
+    temp_response("user/login_load", &data)
+}
+
+pub fn github_callback(req: &mut Request) -> IronResult<Response> {
+    let mut validator = Validator::new();
+    validator.add_checker(Checker::new("code", Str, "code"));
+    validator.validate(req.get::<UrlEncodedQuery>());
+
+    if !validator.is_valid() {
+        return not_found_response();
     }
-    c.path = Some("/".to_owned());
-    c.value = LoginUser::new(user_id, &username, &email).get_user_id();
-    resp.set_cookie(c);
+
+    let code = validator.get_valid::<StrValue>("code").value();
+
+    let client = ::hyper::Client::new();
+
+    let mut url = Url::parse("https://github.com/login/oauth/access_token").unwrap();
+    let conf_t = req.get::<Read<Config>>().unwrap().value();
+    let github_config = conf_t.get("github").unwrap().as_table().unwrap();
+    let client_id = github_config.get("client_id").unwrap().as_str().unwrap();
+    let client_secret = github_config.get("client_secret").unwrap().as_str().unwrap();
+
+    url.query_pairs_mut()
+        .append_pair("client_id", &client_id)
+        .append_pair("client_secret", &client_secret)
+        .append_pair("code", &code);
+
+    let mut res = client.post(url.as_str()).send().unwrap();
+    let mut body = String::new();
+    res.read_to_string(&mut body).unwrap();
+
+    // get access_token
+    let mut access_token = "".to_string();
+    for (k, v) in form_urlencoded::parse(body.as_bytes()).into_owned() {
+        if k == "access_token" {
+            access_token = v;
+        }
+    }
+
+    url = Url::parse("https://api.github.com/user").unwrap();
+    url.query_pairs_mut().append_pair("access_token", &access_token);
+
+    res = client.get(url.as_str())
+        .header(::hyper::header::UserAgent("rust-lang-cn".to_string()))
+        .send()
+        .unwrap();
+
+    body.clear();
+    res.read_to_string(&mut body).unwrap();
+
+    let data = Json::from_str(&body).unwrap();
+    let github_user = data.as_object().unwrap();
+    let github_user_id = github_user.get("id").unwrap().as_u64().unwrap();
+    let github_user_name = github_user.get("login").unwrap().as_string().unwrap();
+    let github_user_email = github_user.get("email").unwrap().as_string().unwrap();
+    let github_user_avatar = github_user.get("avatar_url")
+        .unwrap().as_string().unwrap();
+
+    let now = Local::now().naive_local();
+    let pool = req.get::<Read<MyPool>>().unwrap().value();
+
+    let mut stmt = pool.prepare(
+        "INSERT INTO github_user(id, username, email, avatar_url, \
+         create_time, update_time) VALUES (?, ?, ?, ?, ?, ?) \
+         ON DUPLICATE KEY UPDATE \
+         username=VALUES(username), \
+         email=VALUES(email), \
+         avatar_url=VALUES(avatar_url), \
+         update_time=VALUES(update_time)")
+        .unwrap();
+
+    stmt.execute((
+        github_user_id,
+        github_user_name,
+        github_user_email,
+        github_user_avatar,
+        now,
+        now,
+    )).unwrap();
+
+    // query whether is this github user binded to local user.
+    let raw_user_id: Option<u64> = my::from_row(
+        pool.prep_exec("SELECT user_id from github_user where id=?",
+                             (&github_user_id,))
+        .unwrap().next().unwrap().unwrap());
+
+    let app_path = conf_t.get("app_path").unwrap().as_str().unwrap().to_owned();
+    if let Some(user_id) = raw_user_id {
+        // binded, set session and redirect to home page.
+        let url_str = app_path + "/";
+        let url = iron_url::parse(&url_str).unwrap();
+        let mut resp = Response::with((status::Found, Redirect(url.clone())));
+        set_login(&mut resp, &(user_id.to_string()), true);
+        Ok(resp)
+    } else {
+        // not binded, let user bind.
+        let mut data = ResponseData::new(req);
+        data.insert("github_user_name", github_user_name.to_string().to_json());
+        data.insert("github_user_email", github_user_email.to_string().to_json());
+        let mut resp = temp_response("user/bind_load", &data).unwrap();
+        set_login(&mut resp, &format!("github:{}", github_user_id), false);
+        Ok(resp)
+    }
+}
+
+pub fn login(req: &mut Request) -> IronResult<Response> {
+    let mut validator = Validator::new();
+    validator
+        .add_checker(Checker::new("username", Str, "用户名"))
+        .add_checker(Checker::new("password", Str, "密码"));
+
+    validator.validate(req.get::<UrlEncodedBody>());
+    if !validator.is_valid() {
+        return json_error_response(&validator.messages[0]);
+    }
+
+    let username = validator.get_valid::<StrValue>("username").value();
+    let password = validator.get_valid::<StrValue>("password").value();
+    let pool = req.get::<Read<MyPool>>().unwrap().value();
+
+    let raw_user_id = check_login(&pool, &username, &password);
+    if raw_user_id.is_none() {
+        return json_error_response("对不起，用户名或密码不对");
+    }
+    let user_id = raw_user_id.unwrap();
+
+    // set session
+    let mut resp = json_ok_response().unwrap();
+    set_login(&mut resp, &(user_id.to_string()), true);
     Ok(resp)
 }
 
@@ -380,4 +566,36 @@ fn get_unread_messages_count(data: &mut ResponseData, pool: &my::Pool,
         (login_user.id, constant::MESSAGE::STATUS::INIT)).unwrap()
                                                     .next().unwrap().unwrap());
     data.insert("unread_messages_count", unread_messages_count.to_json());
+}
+
+fn set_login(resp: &mut Response, user_id: &str, persist: bool) {
+    let mut c = Cookie::new("logged_in_user".to_owned(), "".to_owned());
+    c.httponly = true;
+    if persist {
+        c.expires = Some(time::now() + time::Duration::days(365));
+    }
+    c.path = Some("/".to_owned());
+    c.value = user_id.to_string();
+    resp.set_cookie(c);
+}
+
+fn check_login(pool: &my::Pool, username: &str, password: &str) -> Option<u64> {
+    let mut result = pool.prep_exec(
+        "SELECT id, email, password, salt from user where username=?",
+        (username,)).unwrap();
+    let raw_row = result.next();
+    if raw_row.is_none() {
+        return None;
+    }
+    let row = raw_row.unwrap().unwrap();
+    let (user_id, _, pass, salt) = my::from_row::<(
+        u64, String, String, String)>(row);
+    let password_with_salt = password.to_string() + &salt;
+    let mut sh = md5::Md5::new();
+    sh.input_str(&password_with_salt);
+    let hash = sh.result_str();
+    if pass != hash {
+        return None;
+    }
+    Some(user_id)
 }

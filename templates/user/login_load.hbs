@@ -28,20 +28,10 @@
               </div>
 
               <div class="form-group">
-                  <div class="col-sm-offset-2 col-sm-4">
-
-                      <div class="checkbox">
-                          <label>
-                              <input type="checkbox" name="persist" value="1">
-                              记住登录状态
-                          </label>
-                      </div>
-                  </div>
-              </div>
-
-              <div class="form-group">
                 <div class="col-sm-offset-2 col-sm-4">
-                  <button type="submit" class="btn btn-default">登录</button>
+                    <button type="submit" class="btn btn-default">登录</button>
+                    或
+                    <a href="https://github.com/login/oauth/authorize?client_id={{github_client_id}}" class="btn btn-red">直接用GitHub账号登录</a>
                 </div>
               </div>
             </form>

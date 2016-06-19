@@ -149,6 +149,7 @@ pub fn github_register(req: &mut Request) -> IronResult<Response> {
     trans.commit().unwrap();
 
     let mut resp = json_ok_response().unwrap();
+    check_redirect_after_login(req, &mut resp);
     set_login(&mut resp, &(user_id.to_string()), true);
     Ok(resp)
 }
@@ -185,8 +186,8 @@ pub fn github_login(req: &mut Request) -> IronResult<Response> {
 
     // set session
     let mut resp = json_ok_response().unwrap();
+    check_redirect_after_login(req, &mut resp);
     set_login(&mut resp, &(user_id.to_string()), true);
-
     Ok(resp)
 }
 
@@ -300,9 +301,18 @@ pub fn github_callback(req: &mut Request) -> IronResult<Response> {
     let app_path = conf_t.get("app_path").unwrap().as_str().unwrap().to_owned();
     if let Some(user_id) = raw_user_id {
         // binded, set session and redirect to home page.
-        let url_str = app_path + "/";
+        let mut url_str = app_path.clone() + "/";
+        if let Some(c) = req.get_cookie("redirect_url") {
+            let redirect_url = c.value.clone();
+            if redirect_url.starts_with(&app_path) &&
+                redirect_url != app_path.clone() + "/user/login" &&
+                redirect_url != app_path + "/user/login/" {
+                    url_str = redirect_url;
+                }
+        }
         let url = iron_url::parse(&url_str).unwrap();
         let mut resp = Response::with((status::Found, Redirect(url.clone())));
+
         set_login(&mut resp, &(user_id.to_string()), true);
         Ok(resp)
     } else {
@@ -339,18 +349,7 @@ pub fn login(req: &mut Request) -> IronResult<Response> {
 
     // set session
     let mut resp = json_ok_response().unwrap();
-
-    let config = req.get::<Read<Config>>().unwrap();
-    let app_path = config.get("app_path").as_str().unwrap().to_owned();
-
-    if let Some(c) = req.get_cookie("redirect_url") {
-        let redirect_url = c.value.clone();
-        if redirect_url.starts_with(&app_path) &&
-            redirect_url != app_path.clone() + "/user/login" &&
-            redirect_url != app_path + "/user/login/" {
-                resp = json_redirect_response(&redirect_url).unwrap();
-            }
-    }
+    check_redirect_after_login(req, &mut resp);
 
     set_login(&mut resp, &(user_id.to_string()), true);
     Ok(resp)
@@ -628,4 +627,19 @@ fn check_login(pool: &my::Pool, username: &str, password: &str) -> Option<u64> {
         return None;
     }
     Some(user_id)
+}
+
+fn check_redirect_after_login(req: &mut Request, resp: &mut Response) {
+    let config = req.get::<Read<Config>>().unwrap();
+    let app_path = config.get("app_path").as_str().unwrap().to_owned();
+
+    if let Some(c) = req.get_cookie("redirect_url") {
+        let redirect_url = c.value.clone();
+        if redirect_url.starts_with(&app_path) &&
+            redirect_url != app_path.clone() + "/user/login" &&
+            redirect_url != app_path + "/user/login/" {
+                *resp = json_redirect_response(&redirect_url).unwrap();
+            }
+    }
+
 }

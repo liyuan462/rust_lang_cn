@@ -1,6 +1,7 @@
 use iron::prelude::*;
 use base::framework::{ResponseData, temp_response,
-                      json_error_response, json_ok_response, not_found_response};
+                      json_error_response, json_ok_response,
+                      json_redirect_response, not_found_response};
 use urlencoded::UrlEncodedBody;
 use urlencoded::UrlEncodedQuery;
 use base::validator::{Validator, Checker, Str, StrValue, Max, Min, Format};
@@ -29,6 +30,7 @@ use iron::Url as iron_url;
 use base::config::Config;
 use iron::status;
 use iron::modifiers::Redirect;
+use hyper::header::Referer;
 
 pub fn register_load(req: &mut Request) -> IronResult<Response> {
     let mut data = ResponseData::new(req);
@@ -194,7 +196,22 @@ pub fn login_load(req: &mut Request) -> IronResult<Response> {
     let github_config = conf_t.get("github").unwrap().as_table().unwrap();
     let client_id = github_config.get("client_id").unwrap().as_str().unwrap();
     data.insert("github_client_id", client_id.to_json());
-    temp_response("user/login_load", &data)
+    let mut resp = temp_response("user/login_load", &data).unwrap();
+    if let Some(refer) = req.headers.get::<Referer>() {
+        let refer_url = refer.0.clone();
+        let app_path = conf_t.get("app_path").unwrap().as_str().unwrap().to_owned();
+        if refer_url.starts_with(&app_path) &&
+            refer_url != app_path.clone() + "/user/login" &&
+            refer_url != app_path + "/user/login/" {
+                let mut c = Cookie::new("redirect_url".to_owned(), "".to_owned());
+                c.httponly = true;
+                c.path = Some("/".to_owned());
+                c.value = refer_url;
+                resp.set_cookie(c);
+            }
+    }
+
+    Ok(resp)
 }
 
 pub fn github_callback(req: &mut Request) -> IronResult<Response> {
@@ -322,6 +339,19 @@ pub fn login(req: &mut Request) -> IronResult<Response> {
 
     // set session
     let mut resp = json_ok_response().unwrap();
+
+    let config = req.get::<Read<Config>>().unwrap();
+    let app_path = config.get("app_path").as_str().unwrap().to_owned();
+
+    if let Some(c) = req.get_cookie("redirect_url") {
+        let redirect_url = c.value.clone();
+        if redirect_url.starts_with(&app_path) &&
+            redirect_url != app_path.clone() + "/user/login" &&
+            redirect_url != app_path + "/user/login/" {
+                resp = json_redirect_response(&redirect_url).unwrap();
+            }
+    }
+
     set_login(&mut resp, &(user_id.to_string()), true);
     Ok(resp)
 }

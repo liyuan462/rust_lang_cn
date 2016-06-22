@@ -24,26 +24,28 @@ pub mod ARTICLE {
 pub mod CATEGORY {
     use std::collections::HashMap;
 
-    pub const NONSENSE: i8 = 0;
-    pub const ORIGINAL: i8 = 1;
-    pub const FORWARD: i8 = 2;
-    pub const TRANSLATION: i8 = 3;
-    pub const QUESTION: i8 = 4;
-    pub const RECRUIT: i8 = 5;
-    pub const SITE: i8 = 6;
+    pub const COMMUNITY: i8 = 0;
+    pub const ARTICLES: i8 = 1;
+    pub const EVERYDAY: i8 = 2;
+    pub const WEEKLY: i8 = 3;
+    pub const DOC: i8 = 4;
+    pub const RESOURCES: i8 = 5;
+    pub const JOBS: i8 = 6;
+    pub const IRC: i8 = 7;
 
     lazy_static! {
         pub static ref ALL: Vec<i8> = vec![
-            ORIGINAL, FORWARD, TRANSLATION, QUESTION, RECRUIT, NONSENSE, SITE];
+            COMMUNITY, ARTICLES, EVERYDAY, WEEKLY, DOC, RESOURCES, JOBS, IRC];
 
         pub static ref TITLES: HashMap<i8, &'static str> = m_hashmap![
-            NONSENSE => "扯淡",
-            ORIGINAL => "原创",
-            FORWARD => "转载",
-            TRANSLATION => "翻译",
-            QUESTION => "提问",
-            RECRUIT => "招聘",
-            SITE => "站务"
+            COMMUNITY => "社区",           //向 reddit + Stack Overflow 形式演化
+            ARTICLES => "文章",            //同golang中国和go语言中文网的文章板块
+            EVERYDAY => "EveryDay",       //每日两个rust代码段例子，之一同步Rust官方twitter的ervery rust帐号例子，之二由社区贡献。
+            WEEKLY => "Weekly",           //同步官方this week in rust + 国内 this week in rust
+            DOC => "文档",                //重要文档中文化。
+            RESOURCES => "资源",          //包括：开源项目，名库，图书，视频，名站... 利于国内项目学习和发展。
+            JOBS => "招聘",               //关于招聘信息,
+            IRC => "IRC"                 //网络在线即时聊天，交流。
         ];
     }
 

@@ -1,6 +1,7 @@
-app_path = "http://localhost"
-static_path = "http://localhost/static"
+app_path = "http://localhost:3000"
+static_path = "http://localhost:3000/static"
 cookie_sign_key = "test"
+listen = "localhost:3000"
 
 [database]
 host = "localhost"

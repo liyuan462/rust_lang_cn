@@ -26,6 +26,8 @@ extern crate rss;
 extern crate cookie;
 extern crate oven;
 extern crate url;
+extern crate mount;
+extern crate staticfile;
 
 mod base;
 mod handlers;
@@ -36,6 +38,9 @@ use hbsi::{HandlebarsEngine, DirectorySource};
 use persistent::Read;
 use base::config::Config;
 use base::db::MyPool;
+use mount::Mount;
+use staticfile::Static;
+use std::path::Path;
 
 fn main() {
     // init logging
@@ -56,5 +61,11 @@ fn main() {
     hbse.reload().unwrap();
     chain.link_after(hbse);
 
-    iron::Iron::new(chain).http("0.0.0.0:3000").unwrap();
+    let mut mount = Mount::new();
+    mount.mount("/", chain);
+    mount.mount("/static/", Static::new(Path::new("static")));
+
+    let listen = config.get("listen").as_str().unwrap();
+
+    iron::Iron::new(mount).http(listen).unwrap();
 }

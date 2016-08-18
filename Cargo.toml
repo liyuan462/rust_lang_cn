@@ -16,7 +16,6 @@ persistent = "0.2"
 urlencoded = "0.4"
 traitobject = "0.0.3"
 mime = "0.2"
-mysql = "7.0"
 rust-crypto = "0.2"
 rand = "0.3"
 time = "0.1"
@@ -32,3 +31,8 @@ rss = "0.3"
 cookie = "0.2"
 oven = "0.4"
 url = "1.2"
+
+[dependencies.mysql]
+version = "7.0"
+default-features = false
+features = ["ssl"]

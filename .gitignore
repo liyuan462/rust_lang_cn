@@ -3,3 +3,4 @@ config.toml
 log4rs.yaml
 src/sass/.sass-cache
 /node_modules
+.vscode/

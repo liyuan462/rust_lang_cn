@@ -29,6 +29,7 @@ impl ResponseData {
             login_user = login_u.to_json();
         }
         data.insert("login_user".to_owned(), login_user);
+        data.insert("version".to_owned(), env!("CARGO_PKG_VERSION").to_json());
         ResponseData(data)
     }
 

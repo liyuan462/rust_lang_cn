@@ -33,10 +33,12 @@ pub fn gen_categories_json(raw_active_value: Option<i8>) -> Json {
         object.insert("value".to_owned(), value.to_json());
         object.insert("title".to_owned(),
                       constant::CATEGORY::TITLES.get(&value)
-                      .unwrap().to_owned().to_json());
+                          .unwrap()
+                          .to_owned()
+                          .to_json());
         if let Some(active_value) = raw_active_value {
             object.insert("active".to_owned(),
-                          (if *value == active_value {1} else {0}).to_json());
+                          (if *value == active_value { 1 } else { 0 }).to_json());
         }
         categories.push(object.to_json());
     }

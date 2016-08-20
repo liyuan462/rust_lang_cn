@@ -98,7 +98,7 @@ pub fn json_response(status: JsonStatus, message: &str, data: Object, redirect_u
         redirect_url: redirect_url.to_owned(),
     };
 
-    resp.set_mut(mime!(Application/Json)).set_mut(encode(&json_response.to_json()).unwrap()).set_mut(status::Ok);
+    resp.set_mut(mime!(Application / Json)).set_mut(encode(&json_response.to_json()).unwrap()).set_mut(status::Ok);
     Ok(resp)
 }
 
@@ -118,15 +118,15 @@ pub fn json_redirect_response(redirect_url: &str) -> IronResult<Response> {
 pub struct LoginUser {
     pub id: u64,
     pub username: String,
-    pub email: String
+    pub email: String,
 }
 
 impl LoginUser {
     pub fn new(user_id: u64, username: &str, email: &str) -> LoginUser {
-        LoginUser{
+        LoginUser {
             id: user_id,
             username: username.to_owned(),
-            email: email.to_owned()
+            email: email.to_owned(),
         }
     }
 }
@@ -148,7 +148,9 @@ impl User for LoginUser {
             _ => return None,
         };
         let pool = req.get::<Read<MyPool>>().unwrap().value();
-        let mut result = pool.prep_exec("SELECT id, username, email from user where id=?", (&user_id,)).unwrap();
+        let mut result = pool.prep_exec("SELECT id, username, email from user where id=?",
+                       (&user_id,))
+            .unwrap();
         let row = result.next().unwrap().unwrap();
         let (id, username, email) = my::from_row::<(u64, String, String)>(row);
         Some(LoginUser::new(id, &username, &email))
@@ -160,7 +162,8 @@ impl User for LoginUser {
 }
 
 pub fn user_required<F>(handler: F) -> Box<Handler>
-    where F: Send + Sync + 'static + Fn(&mut Request) -> IronResult<Response> {
+    where F: Send + Sync + 'static + Fn(&mut Request) -> IronResult<Response>
+{
 
     let new_fn = move |req: &mut Request| -> IronResult<Response> {
         let login = LoginUser::get_login(req);

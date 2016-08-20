@@ -1,11 +1,8 @@
 use iron::prelude::*;
-use base::framework::{ResponseData, temp_response,
-                      json_error_response, json_ok_response,
-                      not_found_response};
+use base::framework::{ResponseData, temp_response, json_error_response, json_ok_response, not_found_response};
 use urlencoded::UrlEncodedBody;
 use base::db::MyPool;
-use base::validator::{Validator, Checker, Str, StrValue, Int,
-                      IntValue, Max, Min, Lambda};
+use base::validator::{Validator, Checker, Str, StrValue, Int, IntValue, Max, Min, Lambda};
 use base::framework::LoginUser;
 use base::util::render_html;
 use iron_login::User as U;
@@ -28,9 +25,11 @@ pub fn new_load(req: &mut Request) -> IronResult<Response> {
 
 pub fn new(req: &mut Request) -> IronResult<Response> {
     let mut validator = Validator::new();
-    validator
-        .add_checker(Checker::new("category", Int, "类别") << Lambda(Box::new(Arc::new(|v| {
-            !(constant::CATEGORY::ALL.iter().find(|c|**c as i64 == v.downcast_ref_unchecked::<IntValue>().value()).is_none())
+    validator.add_checker(Checker::new("category", Int, "类别") <<
+                     Lambda(Box::new(Arc::new(|v| {
+            !(constant::CATEGORY::ALL.iter()
+                .find(|c| **c as i64 == v.downcast_ref_unchecked::<IntValue>().value())
+                .is_none())
         }))))
         .add_checker(Checker::new("title", Str, "标题") << Min(3) << Max(64))
         .add_checker(Checker::new("content", Str, "内容") << Min(7));
@@ -48,39 +47,46 @@ pub fn new(req: &mut Request) -> IronResult<Response> {
     let user = login.get_user().unwrap();
 
     let now = Local::now().naive_local();
-    let mut stmt = pool.prepare("INSERT INTO article(category, title, content, \
-                                 user_id, create_time, update_time) \
-                                 VALUES (?, ?, ?, ?, ?, ?)").unwrap();
+    let mut stmt =
+        pool.prepare("INSERT INTO article(category, title, content, user_id, create_time, update_time) VALUES (?, ?, \
+                      ?, ?, ?, ?)")
+            .unwrap();
     let result = stmt.execute((category, title, content, user.id, now, now));
     result.unwrap();
     json_ok_response()
 }
 
 pub fn show(req: &mut Request) -> IronResult<Response> {
-    let article_id = try!(req.extensions.get::<Router>().unwrap()
-                       .find("article_id").unwrap()
-                       .parse::<u64>().map_err(|_| not_found_response().unwrap_err()));
+    let article_id = try!(req.extensions
+        .get::<Router>()
+        .unwrap()
+        .find("article_id")
+        .unwrap()
+        .parse::<u64>()
+        .map_err(|_| not_found_response().unwrap_err()));
 
     let pool = req.get::<Read<MyPool>>().unwrap().value();
-    let mut result = pool.prep_exec(
-        "SELECT a.id, a.category, a.title, a.content, a.comments_count, \
-         a.create_time, u.id as user_id, u.username, u.email from article \
-         as a join user as u on a.user_id=u.id where a.id=? and a.status=?",
-        (&article_id, constant::ARTICLE::STATUS::NORMAL)).unwrap();
+    let mut result =
+        pool.prep_exec("SELECT a.id, a.category, a.title, a.content, a.comments_count, a.create_time, u.id as \
+                        user_id, u.username, u.email from article as a join user as u on a.user_id=u.id where a.id=? \
+                        and a.status=?",
+                       (&article_id, constant::ARTICLE::STATUS::NORMAL))
+            .unwrap();
 
     let raw_row = result.next();
     if raw_row.is_none() {
         return not_found_response();
     }
     let row = raw_row.unwrap().unwrap();
-    let (id, category, title, content, comments_count, create_time, user_id, username, email) = my::from_row::<(_,_,_,_,_,_,_,_,String)>(row);
+    let (id, category, title, content, comments_count, create_time, user_id, username, email) =
+        my::from_row::<(_, _, _, _, _, _, _, _, String)>(row);
     let mut article = Article {
         id: id,
         category: Category::from_value(category),
         title: title,
         content: content,
         comments_count: comments_count,
-        user: User{
+        user: User {
             id: user_id,
             avatar: gen_gravatar_url(&email),
             username: username,
@@ -94,28 +100,31 @@ pub fn show(req: &mut Request) -> IronResult<Response> {
     };
     article.content = render_html(&article.content);
 
-    let result = pool.prep_exec(
-        "SELECT c.id, c.content, c.create_time, u.id as user_id, \
-         u.username, u.email from comment \
-         as c join user as u on c.user_id=u.id where c.article_id=? \
-         order by c.create_time", (&article_id, )).unwrap();
+    let result =
+        pool.prep_exec("SELECT c.id, c.content, c.create_time, u.id as user_id, u.username, u.email from comment as \
+                        c join user as u on c.user_id=u.id where c.article_id=? order by c.create_time",
+                       (&article_id,))
+            .unwrap();
 
-    article.comments = result.map(|x| x.unwrap()).map(|row|{
-        let (id, content, create_time, user_id, username, email) = my::from_row::<(_,String,_,_,_,String)>(row);
-        Comment {
-            id: id,
-            content: render_html(&content),
-            user: User {
-                id: user_id,
-                avatar: gen_gravatar_url(&email),
-                username: username,
-                email: email,
-                create_time: *constant::DEFAULT_DATETIME,
-            },
-            create_time: create_time,
-            article: None,
-        }
-    }).collect();
+    article.comments = result.map(|x| x.unwrap())
+        .map(|row| {
+            let (id, content, create_time, user_id, username, email) =
+                my::from_row::<(_, String, _, _, _, String)>(row);
+            Comment {
+                id: id,
+                content: render_html(&content),
+                user: User {
+                    id: user_id,
+                    avatar: gen_gravatar_url(&email),
+                    username: username,
+                    email: email,
+                    create_time: *constant::DEFAULT_DATETIME,
+                },
+                create_time: create_time,
+                article: None,
+            }
+        })
+        .collect();
 
     // judge whether is my article
     let mut is_my_own = false;
@@ -129,7 +138,7 @@ pub fn show(req: &mut Request) -> IronResult<Response> {
     let mut data = ResponseData::new(req);
     data.insert("article", article.to_json());
     data.insert("comments_count", article.comments.len().to_json());
-    let mentions: Vec<String> = article.comments.into_iter().map(|c|c.user.username).collect();
+    let mentions: Vec<String> = article.comments.into_iter().map(|c| c.user.username).collect();
     data.insert("mentions", mentions.to_json());
     data.insert("is_my_own", is_my_own.to_json());
     temp_response("article/show", &data)
@@ -139,25 +148,29 @@ pub fn edit_load(req: &mut Request) -> IronResult<Response> {
     let login = LoginUser::get_login(req);
     let user = login.get_user().unwrap();
 
-    let article_id = try!(req.extensions.get::<Router>().unwrap()
-                       .find("article_id").unwrap()
-                       .parse::<u64>().map_err(|_| not_found_response().unwrap_err()));
+    let article_id = try!(req.extensions
+        .get::<Router>()
+        .unwrap()
+        .find("article_id")
+        .unwrap()
+        .parse::<u64>()
+        .map_err(|_| not_found_response().unwrap_err()));
 
     let pool = req.get::<Read<MyPool>>().unwrap().value();
-    let mut result = pool.prep_exec(
-        "SELECT a.id, a.category, a.title, a.content, a.comments_count, \
-         a.create_time, u.id as user_id, u.username, u.email from article \
-         as a join user as u on a.user_id=u.id where a.id=? and a.status=?",
-        (&article_id, constant::ARTICLE::STATUS::NORMAL)).unwrap();
+    let mut result =
+        pool.prep_exec("SELECT a.id, a.category, a.title, a.content, a.comments_count, a.create_time, u.id as \
+                        user_id, u.username, u.email from article as a join user as u on a.user_id=u.id where a.id=? \
+                        and a.status=?",
+                       (&article_id, constant::ARTICLE::STATUS::NORMAL))
+            .unwrap();
 
     let raw_row = result.next();
     if raw_row.is_none() {
         return not_found_response();
     }
     let row = raw_row.unwrap().unwrap();
-    let (id, category, title, content, comments_count,
-         create_time, user_id, username, email) = my::from_row::<
-            (_,_,_,_,_,_,_,_,String)>(row);
+    let (id, category, title, content, comments_count, create_time, user_id, username, email) =
+        my::from_row::<(_, _, _, _, _, _, _, _, String)>(row);
 
     if user_id != user.id {
         return not_found_response();
@@ -169,7 +182,7 @@ pub fn edit_load(req: &mut Request) -> IronResult<Response> {
         title: title,
         content: content,
         comments_count: comments_count,
-        user: User{
+        user: User {
             id: user_id,
             avatar: gen_gravatar_url(&email),
             username: username,
@@ -193,14 +206,20 @@ pub fn edit(req: &mut Request) -> IronResult<Response> {
     let login = LoginUser::get_login(req);
     let user = login.get_user().unwrap();
 
-    let article_id = try!(req.extensions.get::<Router>().unwrap()
-                       .find("article_id").unwrap()
-                       .parse::<u64>().map_err(|_| not_found_response().unwrap_err()));
+    let article_id = try!(req.extensions
+        .get::<Router>()
+        .unwrap()
+        .find("article_id")
+        .unwrap()
+        .parse::<u64>()
+        .map_err(|_| not_found_response().unwrap_err()));
 
     let mut validator = Validator::new();
-    validator
-        .add_checker(Checker::new("category", Int, "类别") << Lambda(Box::new(Arc::new(|v| {
-            !(constant::CATEGORY::ALL.iter().find(|c|**c as i64 == v.downcast_ref_unchecked::<IntValue>().value()).is_none())
+    validator.add_checker(Checker::new("category", Int, "类别") <<
+                     Lambda(Box::new(Arc::new(|v| {
+            !(constant::CATEGORY::ALL.iter()
+                .find(|c| **c as i64 == v.downcast_ref_unchecked::<IntValue>().value())
+                .is_none())
         }))))
         .add_checker(Checker::new("title", Str, "标题") << Min(3) << Max(64))
         .add_checker(Checker::new("content", Str, "内容") << Min(7));
@@ -219,11 +238,11 @@ pub fn edit(req: &mut Request) -> IronResult<Response> {
     let mut trans = pool.start_transaction(false, None, None).unwrap();
 
     {
-        let mut result = trans.prep_exec(
-            "SELECT u.id as user_id from article \
-             as a join user as u on a.user_id=u.id \
-             where a.id=? and a.status=? for update",
-            (article_id, constant::ARTICLE::STATUS::NORMAL)).unwrap();
+        let mut result =
+            trans.prep_exec("SELECT u.id as user_id from article as a join user as u on a.user_id=u.id where a.id=? \
+                            and a.status=? for update",
+                           (article_id, constant::ARTICLE::STATUS::NORMAL))
+                .unwrap();
 
         let raw_row = result.next();
         if raw_row.is_none() {
@@ -238,9 +257,9 @@ pub fn edit(req: &mut Request) -> IronResult<Response> {
         }
     }
 
-    trans.prep_exec("UPDATE article set category=?, title=?, content=?, \
-                     update_time=? where id=?",
-                    (category, title, content, now, article_id)).unwrap();
+    trans.prep_exec("UPDATE article set category=?, title=?, content=?, update_time=? where id=?",
+                   (category, title, content, now, article_id))
+        .unwrap();
 
 
     trans.commit().unwrap();

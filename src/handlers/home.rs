@@ -35,31 +35,36 @@ pub fn index(req: &mut Request) -> IronResult<Response> {
 
     let pool = req.get::<Read<MyPool>>().unwrap().value();
     let row = pool.prep_exec("SELECT count(id) from article where status=? ",
-                             (constant::ARTICLE::STATUS::NORMAL,))
-        .unwrap().next().unwrap().unwrap();
+                   (constant::ARTICLE::STATUS::NORMAL,))
+        .unwrap()
+        .next()
+        .unwrap()
+        .unwrap();
 
     let count: usize = my::from_row(row);
     let page_count = (count + constant::PAGE_SIZE - 1) / constant::PAGE_SIZE;
 
-    let result = pool.prep_exec(
-        "SELECT a.id, a.category, a.title, a.content, a.comments_count, \
-         a.create_time, a.update_time, a.flag, u.id as user_id, u.username, \
-         u.email from article \
-         as a join user as u on a.user_id=u.id where a.status=? \
-         order by a.flag & 1 desc, a.priority desc, a.update_time desc limit ?,?",
-        (constant::ARTICLE::STATUS::NORMAL,
-         (page - 1) * constant::PAGE_SIZE,
-         constant::PAGE_SIZE)).unwrap();
+    let result =
+        pool.prep_exec("SELECT a.id, a.category, a.title, a.content, a.comments_count, a.create_time, a.update_time, \
+                        a.flag, u.id as user_id, u.username, u.email from article as a join user as u on \
+                        a.user_id=u.id where a.status=? order by a.flag & 1 desc, a.priority desc, a.update_time \
+                        desc limit ?,?",
+                       (constant::ARTICLE::STATUS::NORMAL, (page - 1) * constant::PAGE_SIZE, constant::PAGE_SIZE))
+            .unwrap();
 
     index_data(req, &pool, page, page_count, result, None)
 }
 
 pub fn category(req: &mut Request) -> IronResult<Response> {
-    let category_id = try!(req.extensions.get::<Router>().unwrap()
-                       .find("category_id").unwrap()
-                       .parse::<i8>().map_err(|_| not_found_response().unwrap_err()));
+    let category_id = try!(req.extensions
+        .get::<Router>()
+        .unwrap()
+        .find("category_id")
+        .unwrap()
+        .parse::<i8>()
+        .map_err(|_| not_found_response().unwrap_err()));
 
-    if constant::CATEGORY::ALL.iter().find(|c|**c == category_id).is_none() {
+    if constant::CATEGORY::ALL.iter().find(|c| **c == category_id).is_none() {
         return not_found_response();
     }
 
@@ -77,76 +82,98 @@ pub fn category(req: &mut Request) -> IronResult<Response> {
 
     let pool = req.get::<Read<MyPool>>().unwrap().value();
 
-    let row = pool.prep_exec("SELECT count(id) from article where status=? \
-                              and category=?",
-                             (constant::ARTICLE::STATUS::NORMAL,
-                              category_id)).unwrap()
-        .next().unwrap().unwrap();
+    let row = pool.prep_exec("SELECT count(id) from article where status=? and category=?",
+                   (constant::ARTICLE::STATUS::NORMAL, category_id))
+        .unwrap()
+        .next()
+        .unwrap()
+        .unwrap();
 
     let count: usize = my::from_row(row);
     let page_count = (count + constant::PAGE_SIZE - 1) / constant::PAGE_SIZE;
 
-    let result = pool.prep_exec(
-        "SELECT a.id, a.category, a.title, a.content, a.comments_count, \
-         a.create_time, a.update_time, a.flag, u.id as user_id, u.username, \
-         u.email from article \
-         as a join user as u on a.user_id=u.id where a.status=? and a.category=? \
-         order by a.flag & 1 desc, a.priority desc, a.create_time desc limit ?,?",
-        (constant::ARTICLE::STATUS::NORMAL,
-         category_id,
-         (page - 1) * constant::PAGE_SIZE,
-         constant::PAGE_SIZE)).unwrap();
+    let result =
+        pool.prep_exec("SELECT a.id, a.category, a.title, a.content, a.comments_count, a.create_time, a.update_time, \
+                        a.flag, u.id as user_id, u.username, u.email from article as a join user as u on \
+                        a.user_id=u.id where a.status=? and a.category=? order by a.flag & 1 desc, a.priority desc, \
+                        a.create_time desc limit ?,?",
+                       (constant::ARTICLE::STATUS::NORMAL,
+                        category_id,
+                        (page - 1) * constant::PAGE_SIZE,
+                        constant::PAGE_SIZE))
+            .unwrap();
 
     index_data(req, &pool, page, page_count, result, Some(category_id))
 }
 
-fn index_data(
-    req: &mut Request, pool: &my::Pool,
-    page: usize, page_count: usize,
-    result: QueryResult, raw_category_id: Option<i8>) -> IronResult<Response> {
+fn index_data(req: &mut Request,
+              pool: &my::Pool,
+              page: usize,
+              page_count: usize,
+              result: QueryResult,
+              raw_category_id: Option<i8>)
+              -> IronResult<Response> {
 
-    let articles: Vec<Article> = result.map(|x| x.unwrap()).map(|row| {
-        let (id, category, title, content, comments_count,
-             create_time, update_time, flag,
-             user_id, username, email) = my::from_row::<
-                (_,_,_,_,_,_,_,_,_,_,String)>(row);
+    let articles: Vec<Article> = result.map(|x| x.unwrap())
+        .map(|row| {
+            let (id,
+                 category,
+                 title,
+                 content,
+                 comments_count,
+                 create_time,
+                 update_time,
+                 flag,
+                 user_id,
+                 username,
+                 email) = my::from_row::<(_, _, _, _, _, _, _, _, _, _, String)>(row);
 
-        Article {
-            id: id,
-            category: Category::from_value(category),
-            title: title,
-            content: content,
-            comments_count: comments_count,
-            user: User {
-                id: user_id,
-                avatar: gen_gravatar_url(&email),
-                username: username,
-                email: email,
-                create_time: *constant::DEFAULT_DATETIME,
-            },
-            create_time: create_time,
-            update_time: update_time,
-            flag: flag,
-            comments: Vec::new(),
-        }
-    }).collect();
+            Article {
+                id: id,
+                category: Category::from_value(category),
+                title: title,
+                content: content,
+                comments_count: comments_count,
+                user: User {
+                    id: user_id,
+                    avatar: gen_gravatar_url(&email),
+                    username: username,
+                    email: email,
+                    create_time: *constant::DEFAULT_DATETIME,
+                },
+                create_time: create_time,
+                update_time: update_time,
+                flag: flag,
+                comments: Vec::new(),
+            }
+        })
+        .collect();
 
     // get statistics info
-    let users_count = my::from_row::<usize>(
-        pool.prep_exec("SELECT count(id) as count from user", ())
-            .unwrap().next().unwrap().unwrap());
-    let articles_count = my::from_row::<usize>(
-        pool.prep_exec("SELECT count(id) as count from article", ())
-            .unwrap().next().unwrap().unwrap());
+    let users_count = my::from_row::<usize>(pool.prep_exec("SELECT count(id) as count from user", ())
+        .unwrap()
+        .next()
+        .unwrap()
+        .unwrap());
+    let articles_count = my::from_row::<usize>(pool.prep_exec("SELECT count(id) as count from article", ())
+        .unwrap()
+        .next()
+        .unwrap()
+        .unwrap());
 
     let mut data = ResponseData::new(req);
-    let show_pagination = if page_count > 1 {true} else {false};
+    let show_pagination = if page_count > 1 { true } else { false };
     data.insert("show_pagination", show_pagination.to_json());
     data.insert("pages", gen_pages_json(page_count, page));
     data.insert("previous_page",
-                (if page - 1 < 1 {1} else {page - 1}).to_json());
+                (if page - 1 < 1 { 1 } else { page - 1 }).to_json());
     data.insert("next_page",
-                (if page + 1 > page_count {page_count} else {page + 1}).to_json());
+                (if page + 1 > page_count {
+                        page_count
+                    } else {
+                        page + 1
+                    })
+                    .to_json());
 
     data.insert("articles", articles.to_json());
     data.insert("users_count", users_count.to_json());
@@ -161,13 +188,16 @@ fn index_data(
     }
 
     // get unread messages
-    let mut unread_messages_count:usize = 0;
+    let mut unread_messages_count: usize = 0;
     let raw_login_user = LoginUser::get_login(req).get_user();
     if let Some(login_user) = raw_login_user {
-        unread_messages_count = my::from_row(pool.prep_exec(
-            "SELECT count(id) as count from message where to_user_id=? and status=?",
-            (login_user.id, constant::MESSAGE::STATUS::INIT))
-            .unwrap().next().unwrap().unwrap());
+        unread_messages_count =
+            my::from_row(pool.prep_exec("SELECT count(id) as count from message where to_user_id=? and status=?",
+                           (login_user.id, constant::MESSAGE::STATUS::INIT))
+                .unwrap()
+                .next()
+                .unwrap()
+                .unwrap());
     }
     data.insert("unread_messages_count", unread_messages_count.to_json());
     temp_response("index", &data)
@@ -182,34 +212,35 @@ pub fn rss(req: &mut Request) -> IronResult<Response> {
     let now = Local::now();
     let offset = now.offset().clone();
 
-    let result = pool.prep_exec(
-        "SELECT a.id, a.title, a.content,
-         a.create_time, u.username from article \
-         as a join user as u on a.user_id=u.id where a.status=? \
-         order by a.create_time desc limit ?,?",
-        (constant::ARTICLE::STATUS::NORMAL,
-         0,
-         constant::PAGE_SIZE)).unwrap();
+    let result = pool.prep_exec("SELECT a.id, a.title, a.content,
+         a.create_time, u.username from article as a join user \
+                    as u on a.user_id=u.id where a.status=? order by a.create_time desc limit ?,?",
+                   (constant::ARTICLE::STATUS::NORMAL, 0, constant::PAGE_SIZE))
+        .unwrap();
 
-    let items: Vec<Item> = result.map(|x| x.unwrap()).map(|row| {
-        let (id, title, content, create_time, username) = my::from_row::<(
-            u64, String, String, NaiveDateTime, String)>(row);
+    let items: Vec<Item> = result.map(|x| x.unwrap())
+        .map(|row| {
+            let (id, title, content, create_time, username) =
+                my::from_row::<(u64, String, String, NaiveDateTime, String)>(row);
 
-        let article_path = format!("{}/article/{}", app_path, id);
+            let article_path = format!("{}/article/{}", app_path, id);
 
-        let create_time_with_tz = DateTime::<Local>::from_utc(
-            create_time - offset.local_minus_utc(), offset);
+            let create_time_with_tz = DateTime::<Local>::from_utc(create_time - offset.local_minus_utc(), offset);
 
-        Item {
-            title: Some(util::safe_xml(&title)),
-            pub_date: Some(create_time_with_tz.to_rfc2822()),
-            description: Some(util::safe_xml(&render_html(&content))),
-            author: Some(username),
-            link: Some(article_path.clone()),
-            guid: Some(Guid{is_perma_link: true, value: article_path}),
-            ..Default::default()
-        }
-    }).collect();
+            Item {
+                title: Some(util::safe_xml(&title)),
+                pub_date: Some(create_time_with_tz.to_rfc2822()),
+                description: Some(util::safe_xml(&render_html(&content))),
+                author: Some(username),
+                link: Some(article_path.clone()),
+                guid: Some(Guid {
+                    is_perma_link: true,
+                    value: article_path,
+                }),
+                ..Default::default()
+            }
+        })
+        .collect();
 
     let channel = Channel {
         title: String::from("Rust China社区"),
@@ -224,7 +255,7 @@ pub fn rss(req: &mut Request) -> IronResult<Response> {
     let rss_string = rss.to_string();
 
     let mut resp = Response::new();
-    resp.set_mut(mime!(Application/Xml))
+    resp.set_mut(mime!(Application / Xml))
         .set_mut(rss_string)
         .set_mut(status::Ok);
     Ok(resp)

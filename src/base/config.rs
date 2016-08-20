@@ -21,14 +21,16 @@ impl Config {
         Config(value)
     }
 
-    pub fn get<Q: ?Sized>(&self, key: &Q) -> &Value where String: Borrow<Q>, Q: Ord {
+    pub fn get<Q: ?Sized>(&self, key: &Q) -> &Value
+        where String: Borrow<Q>,
+              Q: Ord
+    {
         self.0.get(key).unwrap()
     }
 
     pub fn value(&self) -> Table {
         self.0.clone()
     }
-
 }
 
 impl Key for Config {

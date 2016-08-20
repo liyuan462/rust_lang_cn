@@ -43,9 +43,7 @@ pub trait FieldValue: Any + 'static {
 
 impl FieldValue {
     pub fn downcast_ref_unchecked<T: FieldValue>(&self) -> &T {
-        unsafe {
-            mem::transmute(traitobject::data(self))
-        }
+        unsafe { mem::transmute(traitobject::data(self)) }
     }
 }
 
@@ -71,8 +69,8 @@ pub trait FieldTypeWithValue {
                 Lambda(l) => {
                     lambda = Some(l);
                     continue;
-                },
-                _ => {},
+                }
+                _ => {}
             }
             if let Err(msg) = value.match_rule(rule) {
                 return Err(format!("{}{}", checker.field_title, msg));
@@ -82,7 +80,7 @@ pub trait FieldTypeWithValue {
         if lambda.is_some() {
             let f = *lambda.unwrap();
             if !f(Box::new(value.clone())) {
-                return Err(format!("{}{}", checker.field_title, "格式不正确"))
+                return Err(format!("{}{}", checker.field_title, "格式不正确"));
             }
         }
 
@@ -90,11 +88,9 @@ pub trait FieldTypeWithValue {
     }
 }
 
-impl <A: FieldValueParser + FieldValue, B: FieldTypeWithValue<Value=A> + Clone + Any + Send + Sync> FieldType for B {
+impl<A: FieldValueParser + FieldValue, B: FieldTypeWithValue<Value = A> + Clone + Any + Send + Sync> FieldType for B {
     fn check(&self, checker: &Checker, raw: String) -> Result<Option<Box<FieldValue>>, String> {
-        self.check(checker, raw).map(|v| {
-            v.map(|v| Box::new(v) as Box<FieldValue>)
-        })
+        self.check(checker, raw).map(|v| v.map(|v| Box::new(v) as Box<FieldValue>))
     }
 }
 
@@ -113,9 +109,10 @@ pub use self::Rule::*;
 
 impl Checker {
     pub fn new<T>(field_name: &str, field_type: T, field_title: &str) -> Checker
-        where T: FieldTypeWithValue + Clone + Any + Send + Sync {
+        where T: FieldTypeWithValue + Clone + Any + Send + Sync
+    {
 
-        Checker{
+        Checker {
             field_name: field_name.to_string(),
             field_type: Box::new(field_type),
             field_title: field_title.to_string(),
@@ -150,11 +147,11 @@ impl Checker {
             match self.check(Some(value)) {
                 Ok(Some(field_value)) => {
                     field_values.push(field_value);
-                },
+                }
                 Err(e) => {
                     return Err(e);
-                },
-                _ => {},
+                }
+                _ => {}
             }
         }
         Ok(Some(field_values))
@@ -182,11 +179,9 @@ impl Checker {
 
         self.field_type.check(self, value)
     }
-
 }
 
 impl Shl<Rule> for Checker {
-
     type Output = Checker;
 
     fn shl(self, rule: Rule) -> Checker {
@@ -240,28 +235,28 @@ impl Validator {
         for checker in &self.checkers {
             let (multiple_values, value) = match query_map.get(&checker.field_name) {
                 Some(values) => (Some(values.clone()), Some(values[0].clone())),
-                None => (None::<Vec<String>>,  None::<String>)
+                None => (None::<Vec<String>>, None::<String>),
             };
 
             if checker.multiple {
                 match checker.check_multiple(multiple_values) {
                     Ok(Some(values)) => {
                         self.valid_data.insert(checker.field_name.clone(), values);
-                    },
+                    }
                     Err(e) => {
                         self.messages.push(e);
-                    },
-                    _ => {},
+                    }
+                    _ => {}
                 }
             } else {
                 match checker.check(value) {
                     Ok(Some(field_value)) => {
                         self.valid_data.insert(checker.field_name.clone(), vec![field_value]);
-                    },
+                    }
                     Err(e) => {
                         self.messages.push(e);
-                    },
-                    _ => {},
+                    }
+                    _ => {}
                 }
             }
 
@@ -304,19 +299,19 @@ impl FieldValue for StrValue {
                 if self.0.len() > max as usize {
                     return Err(format!("长度不能大于{}", max));
                 }
-            },
+            }
             Min(min) => {
                 if self.0.len() < min as usize {
                     return Err(format!("长度不能小于{}", min));
                 }
-            },
+            }
             Format(format) => {
                 let re = Regex::new(&format).unwrap();
                 if !re.is_match(&self.0) {
                     return Err(format!("格式不正确"));
                 }
-            },
-            _ => {},
+            }
+            _ => {}
         }
         Ok(())
     }
@@ -352,13 +347,13 @@ impl FieldValue for IntValue {
                 if self.0 > max {
                     return Err(format!("不能大于{}", max));
                 }
-            },
+            }
             Min(min) => {
                 if self.0 < min {
                     return Err(format!("不能小于{}", min));
                 }
-            },
-            _ => {},
+            }
+            _ => {}
         }
         Ok(())
     }

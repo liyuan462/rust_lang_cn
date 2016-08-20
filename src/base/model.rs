@@ -12,12 +12,12 @@ pub struct User {
 
 impl Default for User {
     fn default() -> User {
-        User{
+        User {
             id: Default::default(),
             username: Default::default(),
             email: Default::default(),
             avatar: Default::default(),
-            create_time: *constant::DEFAULT_DATETIME
+            create_time: *constant::DEFAULT_DATETIME,
         }
     }
 }
@@ -29,7 +29,8 @@ impl ToJson for User {
         object.insert("username".to_owned(), self.username.to_json());
         object.insert("email".to_owned(), self.email.to_json());
         object.insert("avatar".to_owned(), self.avatar.to_json());
-        object.insert("create_time".to_owned(), self.create_time.format("%Y-%m-%d %H:%M:%S").to_string().to_json());
+        object.insert("create_time".to_owned(),
+                      self.create_time.format("%Y-%m-%d %H:%M:%S").to_string().to_json());
         object.to_json()
     }
 }
@@ -73,10 +74,16 @@ impl ToJson for Article {
         object.insert("content".to_owned(), self.content.to_json());
         object.insert("user".to_owned(), self.user.to_json());
         object.insert("comments_count".to_owned(), self.comments_count.to_json());
-        object.insert("create_time".to_owned(), self.create_time.format(
-            "%Y-%m-%d %H:%M:%S").to_string().to_json());
-        object.insert("update_time".to_owned(), self.update_time.format(
-            "%Y-%m-%d %H:%M:%S").to_string().to_json());
+        object.insert("create_time".to_owned(),
+                      self.create_time
+                          .format("%Y-%m-%d %H:%M:%S")
+                          .to_string()
+                          .to_json());
+        object.insert("update_time".to_owned(),
+                      self.update_time
+                          .format("%Y-%m-%d %H:%M:%S")
+                          .to_string()
+                          .to_json());
         object.insert("is_top".to_owned(),
                       (self.flag & constant::ARTICLE::FLAG::TOP > 0).to_json());
         object.insert("is_essence".to_owned(),
@@ -100,7 +107,8 @@ impl ToJson for Comment {
         object.insert("id".to_owned(), self.id.to_json());
         object.insert("content".to_owned(), self.content.to_json());
         object.insert("user".to_owned(), self.user.to_json());
-        object.insert("create_time".to_owned(), self.create_time.format("%Y-%m-%d %H:%M:%S").to_string().to_json());
+        object.insert("create_time".to_owned(),
+                      self.create_time.format("%Y-%m-%d %H:%M:%S").to_string().to_json());
         object.insert("article".to_owned(), self.article.to_json());
         object.to_json()
     }
@@ -130,7 +138,7 @@ impl Category {
     pub fn from_value(value: i8) -> Category {
         Category {
             value: value,
-            title: (*constant::CATEGORY::TITLES.get(&value).unwrap()).to_owned()
+            title: (*constant::CATEGORY::TITLES.get(&value).unwrap()).to_owned(),
         }
     }
 }

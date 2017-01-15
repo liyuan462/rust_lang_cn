@@ -1,11 +1,11 @@
+use std::collections::HashMap;
 use iron::prelude::*;
 use base::framework::{ResponseData, temp_response,
                       json_error_response, json_ok_response,
                       not_found_response};
 use urlencoded::UrlEncodedBody;
 use base::db::MyPool;
-use base::validator::{Validator, Checker, Str, StrValue, Int,
-                      IntValue, Max, Min, Lambda};
+use form_checker::{Validator, Checker, Rule, Str, I64};
 use base::framework::LoginUser;
 use base::util::render_html;
 use iron_login::User as U;
@@ -18,7 +18,6 @@ use rustc_serialize::json::ToJson;
 use base::util;
 use base::util::gen_gravatar_url;
 use base::constant;
-use std::sync::Arc;
 
 pub fn new_load(req: &mut Request) -> IronResult<Response> {
     let mut data = ResponseData::new(req);
@@ -29,20 +28,25 @@ pub fn new_load(req: &mut Request) -> IronResult<Response> {
 pub fn new(req: &mut Request) -> IronResult<Response> {
     let mut validator = Validator::new();
     validator
-        .add_checker(Checker::new("category", Int, "类别") << Lambda(Box::new(Arc::new(|v| {
-            !(constant::CATEGORY::ALL.iter().find(|c|**c as i64 == v.downcast_ref_unchecked::<IntValue>().value()).is_none())
-        }))))
-        .add_checker(Checker::new("title", Str, "标题") << Min(3) << Max(64))
-        .add_checker(Checker::new("content", Str, "内容") << Min(7));
+        .check(Checker::new("category", "类别", I64)
+               .meet(Rule::Lambda(Box::new(|v| {
+                   constant::CATEGORY::ALL.iter().any(
+                       |c|*c as i64 == v.as_i64().unwrap())
+               }), None)))
+        .check(Checker::new("title", "标题", Str)
+               .meet(Rule::Min(3))
+               .meet(Rule::Max(64)))
+        .check(Checker::new("content", "内容", Str)
+               .meet(Rule::Min(7)));
 
-    validator.validate(req.get::<UrlEncodedBody>());
+    validator.validate(&req.get::<UrlEncodedBody>().unwrap_or(HashMap::new()));
     if !validator.is_valid() {
-        return json_error_response(&validator.messages[0]);
+        return json_error_response(&validator.get_some_error());
     }
 
-    let category = validator.get_valid::<IntValue>("category").value();
-    let title = validator.get_valid::<StrValue>("title").value();
-    let content = validator.get_valid::<StrValue>("content").value();
+    let category = validator.get_required("category").as_i64().unwrap();
+    let title = validator.get_required("title").as_str().unwrap();
+    let content = validator.get_required("content").as_str().unwrap();
     let pool = req.get::<Read<MyPool>>().unwrap().value();
     let login = LoginUser::get_login(req);
     let user = login.get_user().unwrap();
@@ -199,20 +203,25 @@ pub fn edit(req: &mut Request) -> IronResult<Response> {
 
     let mut validator = Validator::new();
     validator
-        .add_checker(Checker::new("category", Int, "类别") << Lambda(Box::new(Arc::new(|v| {
-            !(constant::CATEGORY::ALL.iter().find(|c|**c as i64 == v.downcast_ref_unchecked::<IntValue>().value()).is_none())
-        }))))
-        .add_checker(Checker::new("title", Str, "标题") << Min(3) << Max(64))
-        .add_checker(Checker::new("content", Str, "内容") << Min(7));
+        .check(Checker::new("category", "类别", I64)
+               .meet(Rule::Lambda(Box::new(|v| {
+                   constant::CATEGORY::ALL.iter().any(
+                       |c|*c as i64 == v.as_i64().unwrap())
+               }), None)))
+        .check(Checker::new("title", "标题", Str)
+               .meet(Rule::Min(3))
+               .meet(Rule::Max(64)))
+        .check(Checker::new("content", "内容", Str)
+               .meet(Rule::Min(7)));
 
-    validator.validate(req.get::<UrlEncodedBody>());
+    validator.validate(&req.get::<UrlEncodedBody>().unwrap_or(HashMap::new()));
     if !validator.is_valid() {
-        return json_error_response(&validator.messages[0]);
+        return json_error_response(&validator.get_some_error());
     }
 
-    let category = validator.get_valid::<IntValue>("category").value();
-    let title = validator.get_valid::<StrValue>("title").value();
-    let content = validator.get_valid::<StrValue>("content").value();
+    let category = validator.get_required("category").as_i64().unwrap();
+    let title = validator.get_required("title").as_str().unwrap();
+    let content = validator.get_required("content").as_str().unwrap();
     let now = Local::now().naive_local();
 
     let pool = req.get::<Read<MyPool>>().unwrap().value();

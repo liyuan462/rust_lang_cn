@@ -1,9 +1,10 @@
+use std::collections::HashMap;
 use iron::prelude::*;
 use base::framework::{json_error_response, json_ok_response,
                       not_found_response};
 use urlencoded::UrlEncodedBody;
 use base::db::MyPool;
-use base::validator::{Validator, Checker, Str, StrValue, Int, IntValue, Min};
+use form_checker::{Validator, Checker, Rule, Str, I64};
 use base::framework::LoginUser;
 use iron_login::User as U;
 use persistent::Read;
@@ -17,15 +18,15 @@ use base::constant;
 pub fn new(req: &mut Request) -> IronResult<Response> {
     let mut validator = Validator::new();
     validator
-        .add_checker(Checker::new("article_id", Int, "文章ID") << Min(1))
-        .add_checker(Checker::new("content", Str, "内容") << Min(7));
+        .check(Checker::new("article_id", "文章ID", I64).meet(Rule::Min(1)))
+        .check(Checker::new("content", "内容", Str).meet(Rule::Min(7)));
 
-    validator.validate(req.get::<UrlEncodedBody>());
+    validator.validate(&req.get::<UrlEncodedBody>().unwrap_or(HashMap::new()));
     if !validator.is_valid() {
-        return json_error_response(&validator.messages[0]);
+        return json_error_response(&validator.get_some_error());
     }
 
-    let article_id = validator.get_valid::<IntValue>("article_id").value() as u64;
+    let article_id = validator.get_required("article_id").as_i64().unwrap() as u64;
 
     let pool = req.get::<Read<MyPool>>().unwrap().value();
     let mut trans = pool.start_transaction(false, None, None).unwrap();
@@ -39,7 +40,7 @@ pub fn new(req: &mut Request) -> IronResult<Response> {
 
     let article_user_id: u64 = my::from_row(raw_row.unwrap().unwrap());
 
-    let content = validator.get_valid::<StrValue>("content").value();
+    let content = validator.get_required("content").as_str().unwrap();
     let login = LoginUser::get_login(req);
     let user = login.get_user().unwrap();
     let now = Local::now().naive_local();

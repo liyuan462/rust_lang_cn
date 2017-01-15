@@ -28,6 +28,7 @@ extern crate oven;
 extern crate url;
 extern crate mount;
 extern crate staticfile;
+extern crate form_checker;
 
 mod base;
 mod handlers;
@@ -66,6 +67,5 @@ fn main() {
     mount.mount("/static/", Static::new(Path::new("static")));
 
     let listen = config.get("listen").as_str().unwrap();
-
     iron::Iron::new(mount).http(listen).unwrap();
 }

@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use iron::prelude::*;
 use base::framework::{ResponseData, temp_response, not_found_response};
 use base::db::MyPool;
@@ -11,7 +12,7 @@ use base::util::gen_gravatar_url;
 use base::constant;
 use base::util;
 use urlencoded::UrlEncodedQuery;
-use base::validator::{Validator, Checker, Int, IntValue, Min, Optional};
+use form_checker::{Validator, Checker, Rule, I64, CheckerOption};
 use base::framework::LoginUser;
 use iron_login::User as U;
 use iron::status;
@@ -22,14 +23,16 @@ use base::util::render_html;
 
 pub fn index(req: &mut Request) -> IronResult<Response> {
     let mut validator = Validator::new();
-    validator.add_checker(Checker::new("page", Int, "页码") << Min(1) << Optional);
-    validator.validate(req.get::<UrlEncodedQuery>());
+    validator.check(Checker::new("page", "页码", I64)
+                    .meet(Rule::Min(1))
+                    .set(CheckerOption::Optional(true)));
+    validator.validate(&req.get::<UrlEncodedQuery>().unwrap_or(HashMap::new()));
     if !validator.is_valid() {
         return not_found_response();
     }
 
-    let page = match validator.valid_data.get("page") {
-        Some(p) => p[0].downcast_ref_unchecked::<IntValue>().value(),
+    let page = match validator.get_optional("page") {
+        Some(p) => p.as_i64().unwrap(),
         None => 1,
     } as usize;
 
@@ -64,14 +67,16 @@ pub fn category(req: &mut Request) -> IronResult<Response> {
     }
 
     let mut validator = Validator::new();
-    validator.add_checker(Checker::new("page", Int, "页码") << Min(1) << Optional);
-    validator.validate(req.get::<UrlEncodedQuery>());
+    validator.check(Checker::new("page", "页码", I64)
+                    .meet(Rule::Min(1))
+                    .set(CheckerOption::Optional(true)));
+    validator.validate(&req.get::<UrlEncodedQuery>().unwrap_or(HashMap::new()));
     if !validator.is_valid() {
         return not_found_response();
     }
 
-    let page = match validator.valid_data.get("page") {
-        Some(p) => p[0].downcast_ref_unchecked::<IntValue>().value(),
+    let page = match validator.get_optional("page") {
+        Some(p) => p.as_i64().unwrap(),
         None => 1,
     } as usize;
 

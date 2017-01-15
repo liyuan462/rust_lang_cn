@@ -1,10 +1,11 @@
+use std::collections::HashMap;
 use iron::prelude::*;
 use base::framework::{ResponseData, temp_response,
                       json_error_response, json_ok_response,
                       json_redirect_response, not_found_response};
 use urlencoded::UrlEncodedBody;
 use urlencoded::UrlEncodedQuery;
-use base::validator::{Validator, Checker, Str, StrValue, Max, Min, Format};
+use form_checker::{Validator, Checker, Rule, Str, Email};
 use mysql as my;
 use crypto::md5;
 use crypto::digest::Digest;
@@ -45,29 +46,28 @@ pub fn register(req: &mut Request) -> IronResult<Response> {
     let mut validator = Validator::new();
 
     validator
-        .add_checker(
-            Checker::new("username", Str, "用户名")
-                << Min(3)
-                << Max(32)
-                << Format(r"^[a-zA-Z_][\da-zA-Z_]{2,}$"))
-        .add_checker(
-            Checker::new("email", Str, "邮箱")
-                << Min(5)
-                << Max(64)
-                << Format(r"^[^@]+@[^@]+\.[^@]+$"))
-        .add_checker(
-            Checker::new("password", Str, "密码")
-                << Min(8)
-                << Max(32));
+        .check(
+            Checker::new("username", "用户名", Str)
+                .meet(Rule::Min(3))
+                .meet(Rule::Max(32))
+                .meet(Rule::Format(r"^[a-zA-Z_][\da-zA-Z_]{2,}$")))
+        .check(
+            Checker::new("email", "邮箱", Email)
+                .meet(Rule::Min(5))
+                .meet(Rule::Max(64)))
+        .check(
+            Checker::new("password", "密码", Str)
+                .meet(Rule::Min(8))
+                .meet(Rule::Max(32)));
 
-    validator.validate(req.get::<UrlEncodedBody>());
+    validator.validate(&req.get::<UrlEncodedBody>().unwrap_or(HashMap::new()));
     if !validator.is_valid() {
-        return json_error_response(&validator.messages[0]);
+        return json_error_response(&validator.get_some_error());
     }
 
-    let username = validator.get_valid::<StrValue>("username").value();
-    let email = validator.get_valid::<StrValue>("email").value();
-    let password = validator.get_valid::<StrValue>("password").value();
+    let username = validator.get_required("username").as_str().unwrap();
+    let email = validator.get_required("email").as_str().unwrap();
+    let password = validator.get_required("password").as_str().unwrap();
 
     let pool = req.get::<Read<MyPool>>().unwrap().value();
 
@@ -104,24 +104,23 @@ pub fn github_register(req: &mut Request) -> IronResult<Response> {
     let mut validator = Validator::new();
 
     validator
-        .add_checker(
-            Checker::new("username", Str, "用户名")
-                << Min(3)
-                << Max(32)
-                << Format(r"^[a-zA-Z_][\da-zA-Z_]{2,}$"))
-        .add_checker(
-            Checker::new("email", Str, "邮箱")
-                << Min(5)
-                << Max(64)
-                << Format(r"^[^@]+@[^@]+\.[^@]+$"));
+        .check(
+            Checker::new("username", "用户名", Str)
+                .meet(Rule::Min(3))
+                .meet(Rule::Max(32))
+                .meet(Rule::Format(r"^[a-zA-Z_][\da-zA-Z_]{2,}$")))
+        .check(
+            Checker::new("email", "邮箱", Email)
+                .meet(Rule::Min(5))
+                .meet(Rule::Max(64)));
 
-    validator.validate(req.get::<UrlEncodedBody>());
+    validator.validate(&req.get::<UrlEncodedBody>().unwrap_or(HashMap::new()));
     if !validator.is_valid() {
-        return json_error_response(&validator.messages[0]);
+        return json_error_response(&validator.get_some_error());
     }
 
-    let username = validator.get_valid::<StrValue>("username").value();
-    let email = validator.get_valid::<StrValue>("email").value();
+    let username = validator.get_required("username").as_str().unwrap();
+    let email = validator.get_required("email").as_str().unwrap();
     let now = Local::now().naive_local();
     let pool = req.get::<Read<MyPool>>().unwrap().value();
     let mut trans = pool.start_transaction(false, None, None).unwrap();
@@ -162,16 +161,16 @@ pub fn github_login(req: &mut Request) -> IronResult<Response> {
 
     let mut validator = Validator::new();
     validator
-        .add_checker(Checker::new("username", Str, "用户名"))
-        .add_checker(Checker::new("password", Str, "密码"));
+        .check(Checker::new("username", "用户名", Str).meet(Rule::Min(1)))
+        .check(Checker::new("password", "密码", Str).meet(Rule::Min(1)));
 
-    validator.validate(req.get::<UrlEncodedBody>());
+    validator.validate(&req.get::<UrlEncodedBody>().unwrap_or(HashMap::new()));
     if !validator.is_valid() {
-        return json_error_response(&validator.messages[0]);
+        return json_error_response(&validator.get_some_error());
     }
 
-    let username = validator.get_valid::<StrValue>("username").value();
-    let password = validator.get_valid::<StrValue>("password").value();
+    let username = validator.get_required("username").as_str().unwrap();
+    let password = validator.get_required("password").as_str().unwrap();
     let pool = req.get::<Read<MyPool>>().unwrap().value();
 
     let raw_user_id = check_login(&pool, &username, &password);
@@ -217,14 +216,14 @@ pub fn login_load(req: &mut Request) -> IronResult<Response> {
 
 pub fn github_callback(req: &mut Request) -> IronResult<Response> {
     let mut validator = Validator::new();
-    validator.add_checker(Checker::new("code", Str, "code"));
-    validator.validate(req.get::<UrlEncodedQuery>());
+    validator.check(Checker::new("code", "code", Str));
+    validator.validate(&req.get::<UrlEncodedQuery>().unwrap_or(HashMap::new()));
 
     if !validator.is_valid() {
         return not_found_response();
     }
 
-    let code = validator.get_valid::<StrValue>("code").value();
+    let code = validator.get_required("code").as_str().unwrap();
 
     let client = ::hyper::Client::new();
 
@@ -329,16 +328,16 @@ pub fn github_callback(req: &mut Request) -> IronResult<Response> {
 pub fn login(req: &mut Request) -> IronResult<Response> {
     let mut validator = Validator::new();
     validator
-        .add_checker(Checker::new("username", Str, "用户名"))
-        .add_checker(Checker::new("password", Str, "密码"));
+        .check(Checker::new("username", "用户名", Str).meet(Rule::Min(1)))
+        .check(Checker::new("password", "密码", Str).meet(Rule::Min(1)));
 
-    validator.validate(req.get::<UrlEncodedBody>());
+    validator.validate(&req.get::<UrlEncodedBody>().unwrap_or(HashMap::new()));
     if !validator.is_valid() {
-        return json_error_response(&validator.messages[0]);
+        return json_error_response(&validator.get_some_error());
     }
 
-    let username = validator.get_valid::<StrValue>("username").value();
-    let password = validator.get_valid::<StrValue>("password").value();
+    let username = validator.get_required("username").as_str().unwrap();
+    let password = validator.get_required("password").as_str().unwrap();
     let pool = req.get::<Read<MyPool>>().unwrap().value();
 
     let raw_user_id = check_login(&pool, &username, &password);
@@ -631,13 +630,20 @@ fn check_login(pool: &my::Pool, username: &str, password: &str) -> Option<u64> {
 
 fn check_redirect_after_login(req: &mut Request, resp: &mut Response) {
     let config = req.get::<Read<Config>>().unwrap();
-    let app_path = config.get("app_path").as_str().unwrap().to_owned();
+    let app_path = config.get("app_path").as_str().unwrap();
 
     if let Some(c) = req.get_cookie("redirect_url") {
         let redirect_url = c.value.clone();
-        if redirect_url.starts_with(&app_path) &&
-            redirect_url != app_path.clone() + "/user/login" &&
-            redirect_url != app_path + "/user/login/" {
+
+        let exclude_urls = vec![
+            format!("{}/user/login", app_path),
+            format!("{}/user/login/", app_path),
+            format!("{}/user/register", app_path),
+            format!("{}/user/register/", app_path),
+        ];
+
+        if redirect_url.starts_with(app_path) &&
+            !exclude_urls.into_iter().any(|url| url == redirect_url) {
                 *resp = json_redirect_response(&redirect_url).unwrap();
             }
     }

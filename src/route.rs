@@ -23,6 +23,7 @@ pub fn gen_router() -> Router {
     router.get("/user/:user_id/messages", user_required(handlers::user::show_messages));
     router.post("/comment/new", user_required(handlers::comment::new));
     router.get("/rss", handlers::home::rss);
+    router.get("/news", handlers::home::news);
     router.get("/auth/github/callback", handlers::user::github_callback);
     router
 }

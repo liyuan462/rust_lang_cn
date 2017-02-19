@@ -235,6 +235,11 @@ pub fn rss(req: &mut Request) -> IronResult<Response> {
     Ok(resp)
 }
 
+pub fn news(req: &mut Request) -> IronResult<Response> {
+    let data = ResponseData::new(req);
+    temp_response("hacker_news", &data)
+}
+
 fn gen_pages_json(page_count: usize, current_page: usize) -> Json {
     let mut pages = Array::new();
 

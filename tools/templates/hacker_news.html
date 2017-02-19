@@ -1,0 +1,6 @@
+{% for story in stories %}
+<li class="list-group-item news">
+    <p class="title"><a href="{{ story.url }}">{{ story.title }}</a></p>
+    <p><small>{{ story.score }}分 • {{ story.by }} • {{ story.datetime }} • <a href="https://news.ycombinator.com/item?id={{ story.id }}">{{ story.descendants }}个评论</a></small>
+</li>
+{% endfor %}

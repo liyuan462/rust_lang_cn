@@ -24,6 +24,11 @@ p img{
     font-size: 1.3em;
 }
 
+.navbar-nav > li > a {
+    position: relative;
+    top: 4px;
+}
+
 // 消息提醒改为主色
 .new-massage{
     a{
@@ -231,4 +236,25 @@ p img{
     position: relative;
     top: -3px;
     padding: 0 5px;
+}
+
+.news {
+    p {
+        margin-bottom: 0;
+        &.title {
+            font-size: 15px;
+            a:visited {
+                color: #ccc;
+            }
+        }
+        small {
+            color: #bcbcbc;
+            a {
+                color: #bcbcbc;
+            }
+        }
+        a {
+            color: #333;
+        }
+    }
 }

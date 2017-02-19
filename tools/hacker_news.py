@@ -29,7 +29,7 @@ def main():
         "{}/topstories.json".format(API_PREFIX)).json()
     pool = Pool(50)
     rust_stories = list(
-        filter(lambda story: "Rust" in story["title"],
+        filter(lambda story: "Rust" in story.get("title", ""),
                pool.imap(fetch_story, top_story_ids)))[:MAX_COUNT]
     stories_length = len(rust_stories)
     if stories_length < MAX_COUNT:
@@ -62,7 +62,7 @@ def render(rust_stories):
         static_path=STATIC_PATH,
         stories=rust_stories,
         )
-    open("{}/static/html/hacker_news.html".format(dir), "w").write(content)
+    print(content)
 
 
 if __name__ == "__main__":

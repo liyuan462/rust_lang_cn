@@ -6089,4 +6089,9 @@ p img {
   .news p a {
     color: #333; }
 
+.ads .list-group-item {
+  padding: 0; }
+  .ads .list-group-item img {
+    width: 100%; }
+
 /*# sourceMappingURL=base.css.map */

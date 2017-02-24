@@ -258,3 +258,12 @@ p img{
         }
     }
 }
+
+.ads{
+    .list-group-item {
+        padding: 0;
+        img {
+            width: 100%;
+        }
+    }
+}

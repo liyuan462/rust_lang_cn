@@ -49,6 +49,4 @@ gulp
 
 * mac上编译找不到openssl，参见这个[issue](https://github.com/rust-cn/rust_lang_cn/issues/7)
 
-### License
-
-[MIT](https://github.com/rust-cn/rust_lang_cn/blob/master/LICENSE-MIT)
+### License: [MIT](https://github.com/rust-cn/rust_lang_cn/blob/master/LICENSE-MIT)

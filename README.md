@@ -1,6 +1,5 @@
 # rust_lang_cn
 **China Community for Rust lang**
-
 ### 如何运行
 如果要在本地搭建[Rust China](http://rust-lang-cn.org/)测试环境，请参见以下步骤：
 
@@ -49,3 +48,7 @@ gulp
 ### 常见问题
 
 * mac上编译找不到openssl，参见这个[issue](https://github.com/rust-cn/rust_lang_cn/issues/7)
+
+### License
+
+本源码按MIT许可证开源，详见LICENSE-MIT

@@ -51,4 +51,4 @@ gulp
 
 ### License
 
-本源码按MIT许可证开源，详见LICENSE-MIT
+[MIT](https://github.com/rust-cn/rust_lang_cn/blob/master/LICENSE-MIT)
